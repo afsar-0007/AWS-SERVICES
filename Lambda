@@ -1,0 +1,23 @@
+Today, I learned about AWS Lambda, a serverless compute service that allows us to run code without managing servers.
+
+What I Learned
+
+* What AWS Lambda is and why it is used.
+* How Lambda follows a serverless architecture.
+* How a Lambda function is executed in response to an event/trigger.
+* Lambda supports languages such as Python, Java, JavaScript/Node.js, Go, and more.
+* Understanding the basic structure of a Lambda function, including the handler.
+* How Lambda automatically handles scaling based on incoming requests.
+* Lambda uses a pay-per-use model, so we generally pay based on the compute time and requests used.
+* Learned about common Lambda triggers such as API Gateway, S3, EventBridge, SQS, SNS, and CloudWatch.
+* Understood the difference between running an application on EC2 and using Lambda for event-driven workloads.
+* Learned about important Lambda concepts such as execution roles, environment variables, timeout, memory, concurrency, and CloudWatch Logs.
+* Understood how Lambda can be used for automation and scheduled tasks, such as cleaning unused AWS resources.
+
+Simple Example
+
+For example, if an object is uploaded to an S3 bucket, that event can trigger a Lambda function automatically. The function can then process the file without requiring us to keep an EC2 server running continuously.
+
+Key Takeaway
+
+The main thing I learned today is that AWS Lambda lets us focus on writing and running code while AWS manages the underlying servers, scaling, and infrastructure.
