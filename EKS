@@ -1,0 +1,143 @@
+Day — Learning Amazon EKS 🚀
+
+Today, I learned about Amazon Elastic Kubernetes Service (EKS), which is a managed Kubernetes service provided by AWS. EKS allows us to deploy, manage, and scale containerized applications using Kubernetes without manually managing the Kubernetes control plane.
+
+🔹 What is Amazon EKS?
+
+Amazon EKS is AWS’s managed Kubernetes service. In a Kubernetes cluster, the control plane is responsible for managing the cluster, while worker nodes run the application workloads. With EKS, AWS manages the Kubernetes control plane, while we manage the worker nodes and workloads based on our setup.
+
+🔹 EKS Architecture
+
+An EKS cluster mainly consists of:
+
+* Control Plane – Managed by AWS and responsible for managing the Kubernetes cluster.
+* Worker Nodes – EC2 instances or other compute resources where applications run.
+* Pods – The smallest deployable units in Kubernetes where containers run.
+* Kubernetes API Server – Handles communication between users, tools, and the cluster.
+* Scheduler – Decides which worker node should run a Pod.
+* etcd – Stores the Kubernetes cluster state.
+* Controller Manager – Ensures that the actual cluster state matches the desired state.
+
+🔹 EKS Node Groups
+
+EKS worker nodes can be organized into Node Groups. A node group is a collection of worker nodes with similar configurations.
+
+EKS supports:
+
+* Managed Node Groups
+* Self-managed Node Groups
+* AWS Fargate for running Pods without managing EC2 worker nodes
+
+🔹 EKS Networking
+
+EKS integrates with Amazon VPC, allowing Kubernetes workloads to communicate using AWS networking infrastructure. Worker nodes are launched inside VPC subnets, and Kubernetes networking can be integrated with AWS through the VPC CNI plugin.
+
+I also learned how EKS can work with AWS Load Balancers to expose applications outside the cluster.
+
+🔹 EKS Storage
+
+For applications that require persistent storage, EKS can integrate with AWS storage services such as Amazon EBS through the EBS CSI driver.
+
+A typical storage flow is:
+
+Pod → PVC → PV → EBS Volume
+
+This allows application data to persist even when Pods are recreated.
+
+🔹 EKS Security
+
+I learned that EKS security involves both AWS and Kubernetes security mechanisms, including:
+
+* IAM
+* Kubernetes RBAC
+* Security Groups
+* Network Policies
+* Kubernetes Secrets
+* IAM roles for workloads
+* Least-privilege access
+
+IAM controls access to AWS resources, while Kubernetes RBAC controls permissions within the Kubernetes cluster.
+
+🔹 Connecting kubectl with EKS
+
+I learned how to connect my local Kubernetes tools with an EKS cluster using AWS CLI.
+
+First, I can verify my AWS identity:
+
+aws sts get-caller-identity
+
+Then configure kubectl:
+
+aws eks update-kubeconfig --region eu-north-1 --name Cluster-1
+
+After that, I can interact with the cluster using:
+
+kubectl get nodes
+kubectl get pods -A
+kubectl get svc
+kubectl get deployments
+
+🔹 EKS Scaling
+
+EKS supports Kubernetes scaling mechanisms such as:
+
+* HPA (Horizontal Pod Autoscaler) – Automatically adjusts the number of Pods based on resource utilization or other metrics.
+* Cluster Autoscaler – Helps adjust the number of worker nodes.
+* Karpenter – Can automatically provision suitable compute capacity based on pending Pod requirements.
+
+🔹 EKS Monitoring
+
+I also learned that EKS workloads can be monitored using tools and services such as:
+
+* Amazon CloudWatch
+* Container Insights
+* Kubernetes metrics
+* Prometheus
+* Grafana
+
+These tools can help monitor CPU, memory, Pods, nodes, logs, and application health.
+
+🔹 EKS with CI/CD and GitOps
+
+EKS can be integrated with modern DevOps pipelines.
+
+A typical workflow is:
+
+Developer → GitHub → GitHub Actions → Docker Image → ECR/Docker Hub → EKS
+
+For GitOps, tools like Argo CD can automatically synchronize Kubernetes manifests or Helm charts with the EKS cluster.
+
+🔹 Important Commands Learned
+
+aws sts get-caller-identity
+aws eks list-clusters --region eu-north-1
+aws eks update-kubeconfig --region eu-north-1 --name Cluster-1
+kubectl get nodes
+kubectl get pods -A
+kubectl get svc
+kubectl get deployments
+
+🔹 Key Takeaways
+
+Today I learned:
+
+* What Amazon EKS is
+* Why EKS is used
+* EKS architecture
+* Kubernetes control plane and worker nodes
+* EKS Node Groups
+* EKS networking with VPC
+* Load Balancing in EKS
+* EBS storage with EKS
+* IAM and Kubernetes RBAC
+* EKS scaling
+* EKS monitoring
+* Connecting kubectl with EKS
+* EKS integration with CI/CD
+* GitOps with Argo CD
+
+🧠 My Understanding
+
+The main thing I learned today is that Amazon EKS makes it easier to run Kubernetes on AWS by managing the Kubernetes control plane while allowing us to focus on deploying, scaling, securing, and managing our applications running on the cluster.
+
+Another important takeaway is how Kubernetes concepts that I learned earlier—Pods, Deployments, Services, Ingress, ConfigMaps, Secrets, HPA, and RBAC—can be applied to a real cloud environment using Amazon EKS.
