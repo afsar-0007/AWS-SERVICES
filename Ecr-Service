@@ -1,0 +1,40 @@
+Day — Amazon ECR
+
+Today I learned about Amazon Elastic Container Registry (ECR) and how it is used to store and manage Docker container images in AWS.
+
+I understood that building a Docker image locally is only the first step. To use that image with AWS services such as EKS, ECS, or Fargate, we need a container registry where the image can be stored and accessed securely. ECR provides that registry within AWS.
+
+🔹 What I learned
+ECR (Elastic Container Registry) is a managed AWS service for storing and managing container images.
+An ECR Repository is where Docker images are stored.
+Images can have different tags, such as latest, v1, or v2, to identify versions.
+ECR integrates with IAM, allowing access to repositories to be controlled through AWS permissions.
+ECR can be used with services like EKS, ECS, Fargate, and Lambda.
+ECR also provides features such as image scanning and lifecycle policies for managing container images.
+🔹 Hands-on Practice
+
+I created an ECR repository and connected my local Docker environment with AWS using the AWS CLI.
+
+I created a simple Docker image from an HTML/CSS website and practiced the complete process:
+
+Dockerfile
+    ↓
+docker build
+    ↓
+Docker Image
+    ↓
+docker tag
+    ↓
+Amazon ECR
+    ↓
+docker push
+
+I also learned why the image needs to be tagged with the ECR repository URI before pushing it to AWS.
+
+🔹 Key Takeaway
+
+The main thing I understood today is:
+
+Docker builds the image → ECR stores the image → EKS/ECS can pull and run the image.
+
+This hands-on practice helped me understand how container images move from a local development environment into AWS and how ECR fits into a real-world DevOps workflow.
