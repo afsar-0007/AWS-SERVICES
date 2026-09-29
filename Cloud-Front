@@ -1,0 +1,267 @@
+# ☁️ Day — Amazon CloudFront
+
+Today I learned about **Amazon CloudFront**, AWS's Content Delivery Network (CDN) service. I learned how CloudFront delivers static and dynamic content to users through globally distributed **Edge Locations**, helping reduce latency and improve application performance.
+
+## 🔹 What is Amazon CloudFront?
+
+Amazon CloudFront is a **fast and secure Content Delivery Network (CDN)** provided by AWS. It delivers content such as HTML, CSS, JavaScript, images, videos, and APIs to users from locations closer to them.
+
+Instead of every user request traveling directly to the origin server, CloudFront can cache frequently requested content at AWS Edge Locations and serve it from the nearest available location.
+
+## 🔹 Why do we need CloudFront?
+
+Without CloudFront:
+
+```text
+User
+  ↓
+Origin Server / S3
+  ↓
+Content
+```
+
+Every request may need to travel to the origin, which can increase latency for users who are geographically far away.
+
+With CloudFront:
+
+```text
+User
+  ↓
+Nearest Edge Location
+  ↓
+Cached Content
+```
+
+If the requested content is already cached, CloudFront can serve it directly from the Edge Location instead of requesting it again from the origin.
+
+## 🔹 CloudFront Architecture
+
+```text
+                    Users
+                 /    |    \
+                ↓     ↓     ↓
+          Edge Locations
+                |
+                ↓
+        Amazon CloudFront
+                |
+                ↓
+             Origin
+          /           \
+         ↓             ↓
+       S3             EC2
+                      / 
+                    ALB
+```
+
+The **origin** is the location from which CloudFront retrieves content when it is not already available in the cache.
+
+## 🔹 Important CloudFront Components
+
+### 1. Distribution
+
+A **CloudFront Distribution** is the main configuration that tells CloudFront where to get content from and how to deliver it to users.
+
+It defines things such as:
+
+* Origin
+* Cache behavior
+* Allowed HTTP methods
+* HTTPS configuration
+* Viewer protocol policy
+* Geographic restrictions
+* Logging and other settings
+
+### 2. Origin
+
+The origin is the backend source of the content.
+
+Examples include:
+
+* Amazon S3
+* Application Load Balancer
+* EC2
+* API Gateway
+* Other HTTP servers
+
+For my hands-on practice, I worked with a **static website hosted on Amazon S3**.
+
+### 3. Edge Locations
+
+CloudFront uses a global network of Edge Locations.
+
+When a user requests content, CloudFront can serve cached content from an Edge Location that is geographically closer to the user.
+
+### 4. Cache
+
+CloudFront temporarily stores frequently requested content at Edge Locations.
+
+For example:
+
+```text
+User 1 → CloudFront → S3
+                 ↓
+              Cache
+
+User 2 → CloudFront
+           ↓
+      Cached Content
+```
+
+The second request may be served from the cache without contacting S3 again.
+
+## 🔹 CloudFront with Amazon S3
+
+A common architecture for static websites is:
+
+```text
+User
+  ↓
+CloudFront
+  ↓
+S3 Bucket
+  ↓
+HTML / CSS / JS / Images
+```
+
+I learned that S3 can act as the **origin** while CloudFront acts as the **CDN layer** in front of it.
+
+This provides a way to distribute static content globally while reducing the number of requests reaching the S3 origin.
+
+## 🔹 Cache Hit and Cache Miss
+
+I also learned the basic caching concepts.
+
+### Cache Hit
+
+If the requested object already exists in the CloudFront cache:
+
+```text
+User
+ ↓
+CloudFront Edge Location
+ ↓
+Cached Content
+```
+
+CloudFront can return the content directly.
+
+### Cache Miss
+
+If the object is not available in the cache:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+Origin (S3)
+ ↓
+Content
+ ↓
+CloudFront Cache
+ ↓
+User
+```
+
+CloudFront retrieves the object from the origin and can cache it for subsequent requests according to the configured caching behavior.
+
+## 🔹 TTL
+
+**TTL (Time To Live)** controls how long CloudFront keeps an object in its cache before it needs to check the origin again.
+
+For example:
+
+```text
+TTL = 1 hour
+```
+
+The cached object can remain fresh according to that configured caching policy for that period.
+
+## 🔹 HTTPS and Security
+
+CloudFront supports secure content delivery using **HTTPS**.
+
+It can also integrate with AWS security services and features such as:
+
+* AWS WAF
+* AWS Shield
+* Origin Access Control (OAC)
+* TLS/SSL certificates through AWS Certificate Manager (ACM)
+
+For an S3 origin, **Origin Access Control (OAC)** can be used so that CloudFront accesses the S3 bucket on behalf of users rather than requiring the bucket to be publicly accessible.
+
+## 🔹 CloudFront vs S3
+
+I learned that S3 and CloudFront solve different problems.
+
+**Amazon S3:**
+
+> Object storage used to store files such as HTML, CSS, JavaScript, images, backups, and other objects.
+
+**Amazon CloudFront:**
+
+> CDN used to deliver content efficiently to users through a global network of edge locations.
+
+Together:
+
+```text
+S3
+↓
+Stores the website
+
+CloudFront
+↓
+Delivers the website
+```
+
+## 🔹 Main Benefits of CloudFront
+
+* Reduces latency by serving cached content closer to users
+* Improves website and application performance
+* Reduces repeated requests to the origin
+* Supports HTTPS and secure content delivery
+* Provides caching and customizable cache behaviors
+* Integrates with S3, EC2, ALB, API Gateway, and other origins
+* Works with AWS security services such as WAF and Shield
+* Provides global content distribution
+
+## 🔹 Hands-on Practice
+
+Today I also worked practically with a simple static website.
+
+The architecture was:
+
+```text
+HTML + CSS
+    ↓
+Amazon S3
+    ↓
+CloudFront Distribution
+    ↓
+CloudFront Edge Locations
+    ↓
+Users
+```
+
+I created a simple static website using HTML and CSS, uploaded the files to an S3 bucket, configured CloudFront with S3 as the origin, and accessed the website through the CloudFront distribution.
+
+## 🔹 Key Takeaway
+
+Today I understood that **Amazon S3 stores static website content, while CloudFront distributes that content efficiently through AWS's edge network**.
+
+The overall concept I learned was:
+
+```text
+User
+  ↓
+CloudFront
+  ↓
+Nearest Edge Location
+  ↓
+Cache
+  ↓
+S3 Origin (if required)
+```
+
+CloudFront therefore acts as the **delivery and caching layer between users and the origin**, helping applications deliver content with lower latency and better performance.
