@@ -1,0 +1,463 @@
+# ☁️ AWS Learning Journey — Amazon ECS
+
+Today, I learned about **Amazon ECS (Elastic Container Service)**, which is a fully managed **container orchestration service provided by AWS**. ECS is used to deploy, run, manage, and scale Docker containers without having to manage the container orchestration platform ourselves.
+
+I also understood how ECS fits into the AWS container ecosystem, especially how it works with **Amazon ECR** for storing and retrieving Docker images.
+
+---
+
+## 🔹 What is Amazon ECS?
+
+**Amazon ECS (Elastic Container Service)** is an AWS service that allows us to run and manage Docker containers at scale.
+
+Instead of manually running containers using commands such as:
+
+```bash
+docker run
+```
+
+ECS allows us to define how our containers should run and lets AWS manage their deployment, availability, scaling, and networking.
+
+The basic flow is:
+
+```text
+Dockerfile
+    ↓
+Docker Image
+    ↓
+Amazon ECR
+    ↓
+ECS Task Definition
+    ↓
+ECS Task
+    ↓
+ECS Service
+    ↓
+Running Containers
+```
+
+---
+
+## 🔹 ECS Cluster
+
+An **ECS Cluster** is a logical grouping of resources where our ECS tasks and services run.
+
+For example:
+
+```text
+ECS Cluster
+│
+├── Service
+│   ├── Task
+│   │   └── Container
+│   └── Task
+│       └── Container
+│
+└── Service
+    └── Task
+        └── Container
+```
+
+The cluster provides the environment in which ECS workloads are managed.
+
+Depending on the launch type, the containers can run on **EC2 instances** or **AWS Fargate**.
+
+---
+
+## 🔹 Task Definition
+
+A **Task Definition** is like a blueprint or configuration file that tells ECS how a container should run.
+
+It defines things such as:
+
+* Docker image
+* CPU
+* Memory
+* Container port
+* Environment variables
+* Networking configuration
+* Logging configuration
+* IAM roles
+* Storage requirements
+
+For example, if my Docker image is stored in ECR:
+
+```text
+123456789012.dkr.ecr.eu-north-1.amazonaws.com/my-app:latest
+```
+
+I can specify this image inside the ECS Task Definition.
+
+Conceptually:
+
+```text
+Task Definition
+│
+├── Image → ECR image
+├── CPU
+├── Memory
+├── Port
+├── Environment Variables
+└── Logging
+```
+
+The Task Definition does **not mean that a container is currently running**. It only defines how the container should run.
+
+---
+
+## 🔹 ECS Task
+
+A **Task** is a running instance of a Task Definition.
+
+For example, if I have:
+
+```text
+Task Definition: my-app
+```
+
+and ECS starts it, the running instance becomes:
+
+```text
+Task
+ └── Container
+      └── my-app
+```
+
+If I start three copies:
+
+```text
+Task Definition
+      │
+      ├── Task 1
+      ├── Task 2
+      └── Task 3
+```
+
+Each task represents a running workload based on the same Task Definition.
+
+---
+
+## 🔹 ECS Service
+
+An **ECS Service** is responsible for maintaining the desired number of running tasks.
+
+For example, suppose I configure:
+
+```text
+Desired count = 3
+```
+
+ECS tries to keep three tasks running:
+
+```text
+ECS Service
+│
+├── Task 1 ✅
+├── Task 2 ✅
+└── Task 3 ✅
+```
+
+If Task 2 fails:
+
+```text
+ECS Service
+│
+├── Task 1 ✅
+├── Task 2 ❌
+└── Task 3 ✅
+```
+
+ECS can launch a replacement task:
+
+```text
+ECS Service
+│
+├── Task 1 ✅
+├── Task 3 ✅
+└── Task 4 🆕
+```
+
+This helps maintain application availability without manually restarting failed containers.
+
+---
+
+## 🔹 Amazon ECR + ECS
+
+I also learned how **Amazon ECR (Elastic Container Registry)** works together with ECS.
+
+ECR is used to store Docker container images.
+
+The workflow is:
+
+```text
+Developer
+    ↓
+Docker Build
+    ↓
+Docker Image
+    ↓
+Amazon ECR
+    ↓
+ECS Task Definition
+    ↓
+ECS Task
+    ↓
+Container
+```
+
+For example:
+
+```text
+ECR Repository
+└── my-go-app
+      ├── v1
+      ├── v2
+      └── latest
+```
+
+The ECS Task Definition references the ECR image, and ECS pulls the image when starting the task.
+
+---
+
+## 🔹 ECS Launch Types
+
+I learned about two important ways of running ECS workloads:
+
+### 1. ECS with EC2
+
+With the EC2 launch type, we manage the underlying EC2 instances.
+
+```text
+ECS Cluster
+     ↓
+EC2 Instances
+     ↓
+ECS Tasks
+     ↓
+Containers
+```
+
+This gives more control over the underlying infrastructure, but we are also responsible for managing the EC2 capacity.
+
+### 2. AWS Fargate
+
+With **Fargate**, AWS manages the underlying server infrastructure for the containers.
+
+```text
+ECS
+ ↓
+Fargate
+ ↓
+Task
+ ↓
+Container
+```
+
+We mainly focus on defining the task requirements rather than managing EC2 instances ourselves.
+
+---
+
+## 🔹 ECS Networking
+
+ECS tasks running with the appropriate networking configuration can be connected to an AWS VPC.
+
+I learned about concepts such as:
+
+* VPC
+* Subnets
+* Security Groups
+* Task networking
+* Container ports
+
+For example:
+
+```text
+Internet
+    ↓
+Load Balancer
+    ↓
+ECS Service
+    ↓
+ECS Tasks
+    ↓
+Containers
+```
+
+Security Groups can control which traffic is allowed to reach the application.
+
+---
+
+## 🔹 ECS + Application Load Balancer
+
+For web applications, an **Application Load Balancer (ALB)** can be placed in front of an ECS service.
+
+For example:
+
+```text
+User
+ ↓
+Application Load Balancer
+ ↓
+ECS Service
+ ↓
+Task 1
+Task 2
+Task 3
+```
+
+The load balancer distributes incoming traffic across healthy tasks.
+
+This allows multiple container instances to serve the same application.
+
+---
+
+## 🔹 ECS Scaling
+
+ECS services can run multiple copies of a task.
+
+For example:
+
+```text
+Low traffic
+    ↓
+2 Tasks
+
+High traffic
+    ↓
+5 Tasks
+```
+
+This allows applications to handle changing workloads.
+
+ECS can work with AWS scaling capabilities to automatically adjust the number of running tasks based on configured conditions.
+
+---
+
+## 🔹 ECS vs Docker
+
+Docker is mainly used to:
+
+```text
+Build
+Run
+Package
+Ship
+```
+
+containers.
+
+ECS is used to:
+
+```text
+Deploy
+Manage
+Scale
+Monitor
+```
+
+containers across AWS infrastructure.
+
+So they work together rather than being direct replacements for each other.
+
+```text
+Docker
+   ↓
+Build Image
+   ↓
+ECR
+   ↓
+ECS
+   ↓
+Run & Manage Containers
+```
+
+---
+
+## 🔹 ECS vs Kubernetes
+
+I also connected ECS with my existing Kubernetes knowledge.
+
+The concepts are roughly comparable:
+
+| ECS             | Kubernetes                                  |
+| --------------- | ------------------------------------------- |
+| ECS Cluster     | Kubernetes Cluster                          |
+| Task Definition | Pod specification / workload configuration  |
+| Task            | Pod                                         |
+| ECS Service     | Kubernetes Deployment/Service concepts      |
+| ECR             | Container Registry                          |
+| Fargate         | Managed/serverless container compute option |
+
+However, ECS is an **AWS-native container orchestration service**, while Kubernetes is an open-source container orchestration platform that can be managed through services such as **Amazon EKS**.
+
+---
+
+## 🔹 Complete ECS Workflow
+
+The complete workflow I learned today can be summarized as:
+
+```text
+                    Developer
+                       │
+                       ↓
+                  Dockerfile
+                       │
+                       ↓
+                 Docker Image
+                       │
+                       ↓
+                      ECR
+                       │
+                       ↓
+                ECS Task Definition
+                       │
+                       ↓
+                  ECS Service
+                       │
+                       ↓
+                 Running Tasks
+                       │
+                       ↓
+                   Containers
+                       │
+                       ↓
+               Application Users
+```
+
+For a production-style web application:
+
+```text
+                    Internet
+                       │
+                       ↓
+                  ALB / DNS
+                       │
+                       ↓
+                  ECS Service
+                       │
+              ┌────────┼────────┐
+              ↓        ↓        ↓
+            Task 1   Task 2   Task 3
+              │        │        │
+              ↓        ↓        ↓
+          Container Container Container
+```
+
+---
+
+## 🔑 Key Takeaways
+
+Today I learned that ECS provides a managed way to run Docker containers on AWS and understood the relationship between the main ECS components:
+
+* **Cluster** → logical environment for ECS workloads
+* **Task Definition** → blueprint describing how containers should run
+* **Task** → running instance of a Task Definition
+* **Service** → maintains the desired number of running tasks
+* **ECR** → stores container images
+* **EC2** → provides infrastructure for ECS tasks when using EC2 launch type
+* **Fargate** → runs ECS tasks without managing the underlying servers
+* **ALB** → can distribute traffic to ECS tasks
+* **VPC/Security Groups** → provide networking and traffic control
+* **Scaling** → allows ECS services to adjust the number of running tasks
+
+This gave me a better understanding of how AWS handles containerized applications from **building and storing the image to deploying, networking, scaling, and maintaining running containers**.
