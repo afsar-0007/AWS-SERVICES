@@ -1,0 +1,124 @@
+## ☁️ AWS Config
+
+Today I learned about **AWS Config**, an AWS service used to **continuously monitor, record, and evaluate the configuration of AWS resources**.
+
+AWS Config helps us understand **what resources exist, how they are configured, and how their configurations change over time**. It can track resources such as EC2 instances, S3 buckets, security groups, VPCs, and more.
+
+### 🔹 Why do we need AWS Config?
+
+In a real AWS environment, resources can be created or modified frequently. AWS Config helps us answer questions like:
+
+* What resources are currently running?
+* What configuration did a resource have previously?
+* When did a configuration change?
+* Is a resource following our security or compliance requirements?
+* Which resources are non-compliant?
+
+For example, if someone changes an EC2 security group and accidentally allows unrestricted access, AWS Config can detect the configuration and evaluate it against a rule.
+
+### 🔹 Configuration History
+
+AWS Config maintains a history of resource configurations.
+
+For example:
+
+```text
+10:00 AM → Security Group allows port 22 only
+11:30 AM → Port 80 added
+01:00 PM → Port 0.0.0.0/0 added
+```
+
+We can use the configuration history to understand **what changed and when**. This is especially useful for auditing and troubleshooting.
+
+### 🔹 AWS Config Rules
+
+AWS Config Rules are used to check whether AWS resources follow specific configuration requirements.
+
+For example:
+
+```text
+Rule: S3 buckets should not be publicly accessible
+
+        ↓
+
+AWS Config evaluates S3 buckets
+
+        ↓
+
+Compliant / Non-Compliant
+```
+
+If a resource violates a rule, AWS Config marks it as **NON_COMPLIANT**.
+
+### 🔹 Example
+
+Suppose we want all EBS volumes to be encrypted.
+
+We can create an AWS Config rule that checks EBS volume encryption.
+
+```text
+EBS Volume
+    ↓
+AWS Config Rule
+    ↓
+Encrypted? 
+   ↙    ↘
+ YES     NO
+  ↓       ↓
+Compliant  Non-Compliant
+```
+
+This allows DevOps and security teams to continuously monitor whether resources follow organizational standards.
+
+### 🔹 AWS Config and S3
+
+AWS Config can deliver configuration history and snapshots to an **S3 bucket** for storage. This allows us to retain configuration information for auditing and analysis.
+
+### 🔹 AWS Config and SNS
+
+AWS Config can also work with **SNS** to send notifications when configuration or compliance changes occur.
+
+For example:
+
+```text
+EC2 configuration changes
+        ↓
+AWS Config
+        ↓
+Rule evaluation
+        ↓
+Non-Compliant
+        ↓
+SNS Notification
+```
+
+### 🔹 Remediation
+
+AWS Config can also be used with remediation actions to respond to non-compliant resources. Remediation can be configured as manual or automatic depending on the requirement.
+
+### 🔹 Conformance Packs
+
+A **Conformance Pack** is a collection of AWS Config rules that can be deployed and monitored together.
+
+Instead of managing many individual rules separately, we can group related rules into a single conformance pack for a particular compliance or operational requirement.
+
+### 🔹 AWS Config in DevOps
+
+AWS Config is useful in DevOps for:
+
+* **Compliance monitoring**
+* **Security configuration checks**
+* **Auditing infrastructure changes**
+* **Troubleshooting configuration issues**
+* **Continuous governance**
+* **Monitoring infrastructure against organizational standards**
+
+### 🔑 Key Takeaway
+
+**AWS Config is mainly about configuration visibility, configuration history, and compliance.**
+
+It helps DevOps teams continuously answer:
+
+> **“What is the current configuration of my AWS resources, what changed, and does the current configuration follow my rules?”**
+
+This makes AWS Config useful for maintaining **secure, compliant, and properly configured AWS infrastructure**.
