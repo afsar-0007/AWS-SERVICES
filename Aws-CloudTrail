@@ -1,0 +1,167 @@
+## ☁️ AWS CloudTrail
+
+Today I learned about **AWS CloudTrail**, an AWS service used to **record and track API activity and actions performed in an AWS account**.
+
+CloudTrail helps us understand **who performed an action, what action was performed, when it happened, and from where the request originated**.
+
+### 🔹 Why do we need CloudTrail?
+
+In an AWS environment, many users, applications, and AWS services can perform actions on resources.
+
+For example:
+
+```text
+Someone deletes an EC2 instance
+        ↓
+CloudTrail records the API event
+        ↓
+Who performed it?
+What action was performed?
+When did it happen?
+From which IP?
+Which AWS resource was affected?
+```
+
+This makes CloudTrail extremely useful for **auditing, security investigations, troubleshooting, and tracking changes**.
+
+### 🔹 What does CloudTrail record?
+
+A CloudTrail event can provide information such as:
+
+* **Who** performed the action
+* **What** API/action was performed
+* **When** it happened
+* **Which AWS resource** was affected
+* **Source IP address**
+* **AWS Region**
+* **User/Role identity**
+* Request and response details in many cases
+
+For example:
+
+```text
+User: Afsar
+Action: DeleteBucket
+Resource: my-test-bucket
+Time: 10:35 AM
+Region: eu-north-1
+Source IP: x.x.x.x
+```
+
+### 🔹 Simple Example
+
+Suppose an EC2 instance suddenly gets terminated.
+
+Without CloudTrail, it may be difficult to determine who or what performed the action.
+
+With CloudTrail:
+
+```text
+EC2 Instance Terminated
+        ↓
+CloudTrail Event
+        ↓
+Look at Event History
+        ↓
+Find the API call
+        ↓
+Identify user/role + time + source
+```
+
+So CloudTrail helps us **investigate and trace AWS activity**.
+
+### 🔹 CloudTrail Event History
+
+AWS provides **Event History**, where we can search recent management events in an AWS account.
+
+For example, we can search for actions such as:
+
+```text
+RunInstances
+TerminateInstances
+CreateBucket
+DeleteBucket
+CreateSecurityGroup
+AuthorizeSecurityGroupIngress
+PutObject
+```
+
+This is useful when troubleshooting unexpected changes in AWS infrastructure.
+
+### 🔹 CloudTrail and S3
+
+CloudTrail logs can also be delivered to an **S3 bucket** for long-term storage and auditing.
+
+A simplified flow is:
+
+```text
+AWS Account Activity
+        ↓
+AWS CloudTrail
+        ↓
+S3 Bucket
+        ↓
+Long-term Audit / Investigation
+```
+
+### 🔹 CloudTrail and CloudWatch
+
+CloudTrail can also work with **CloudWatch Logs** and other AWS services to build monitoring and alerting workflows.
+
+For example:
+
+```text
+AWS API Activity
+       ↓
+CloudTrail
+       ↓
+CloudWatch
+       ↓
+Alarm / Event
+       ↓
+Notification or Automated Action
+```
+
+This can be useful for detecting important activities such as changes to security groups, IAM policies, or other critical resources.
+
+### 🔹 CloudTrail in DevOps
+
+CloudTrail is useful in DevOps for:
+
+* **Auditing AWS activities**
+* **Tracking infrastructure changes**
+* **Security investigations**
+* **Troubleshooting unexpected changes**
+* **Monitoring user and IAM role activity**
+* **Maintaining an audit trail**
+* **Supporting compliance requirements**
+
+### 🔹 CloudTrail vs AWS Config
+
+A simple way to remember the difference:
+
+| AWS Service        | Main Purpose                                            |
+| ------------------ | ------------------------------------------------------- |
+| **AWS Config**     | What is the resource configuration and is it compliant? |
+| **AWS CloudTrail** | Who performed an action and when?                       |
+
+For example:
+
+```text
+AWS Config:
+"Security Group currently allows port 22."
+
+CloudTrail:
+"User/Role X changed the Security Group at 10:30 AM."
+```
+
+They can therefore be used together for better visibility into AWS infrastructure.
+
+### 🔑 Key Takeaway
+
+**AWS CloudTrail records AWS API activity and provides an audit trail of actions performed in an AWS account.**
+
+The easiest way to remember it is:
+
+> **AWS Config → “What is the configuration?”**
+> **AWS CloudTrail → “Who changed/did what, and when?”**
