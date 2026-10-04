@@ -1,0 +1,381 @@
+# AWS Load Balancer
+
+Today I learned about the concept of **Load Balancing** in AWS and why it is important when running applications that need to handle multiple users and requests.
+
+## What is a Load Balancer?
+
+A **Load Balancer** is a component that distributes incoming network traffic across multiple servers or application instances.
+
+Instead of sending every request to a single server, the load balancer receives the incoming requests and forwards them to available backend servers.
+
+For example:
+
+```text
+                    Users
+                      |
+                      ▼
+               ┌─────────────┐
+               │Load Balancer │
+               └──────┬──────┘
+                      |
+          ┌───────────┼───────────┐
+          ▼           ▼           ▼
+      Server 1     Server 2     Server 3
+```
+
+If 300 users send requests to an application, the load balancer can distribute those requests among multiple servers instead of allowing one server to handle everything.
+
+---
+
+## Why do we need a Load Balancer?
+
+Without a load balancer, an application may depend on a single server.
+
+```text
+Users
+  |
+  ▼
+Server
+```
+
+If that server becomes overloaded or fails, users may experience:
+
+- Slow response times
+- Failed requests
+- Application downtime
+- Poor user experience
+
+With a load balancer:
+
+```text
+                    Users
+                      |
+                      ▼
+               Load Balancer
+                /     |     \
+               ▼      ▼      ▼
+             EC2     EC2     EC2
+```
+
+Traffic can be distributed across multiple servers, making the application more reliable and scalable.
+
+---
+
+## Main Benefits of Load Balancing
+
+### 1. Traffic Distribution
+
+The primary responsibility of a load balancer is to distribute incoming traffic across multiple backend servers.
+
+This prevents one server from receiving all the traffic while other servers remain underutilized.
+
+### 2. High Availability
+
+Load balancing helps improve application availability by having multiple backend servers.
+
+If one server becomes unavailable, traffic can be directed toward healthy servers.
+
+For example:
+
+```text
+                 Load Balancer
+                /      |      \
+               ▼       ▼       ▼
+             EC2-1   EC2-2   EC2-3
+              ❌       ✅       ✅
+
+                    ↓
+
+             Traffic goes to
+             healthy servers
+```
+
+This reduces the impact of individual server failures.
+
+### 3. Scalability
+
+Load balancers are commonly used together with multiple application instances.
+
+When traffic increases, additional servers can be added:
+
+```text
+Low Traffic
+
+Load Balancer
+      |
+   ┌──┴──┐
+   ▼     ▼
+ EC2    EC2
+
+
+High Traffic
+
+Load Balancer
+      |
+ ┌────┼────┬────┐
+ ▼    ▼    ▼    ▼
+EC2  EC2  EC2  EC2
+```
+
+The load balancer can then distribute traffic across the additional instances.
+
+### 4. Health Checking
+
+A load balancer can check whether backend servers are healthy.
+
+For example, it may periodically send a request such as:
+
+```text
+GET /health
+```
+
+If a server responds correctly, it can continue receiving traffic.
+
+If the server fails the health check, the load balancer can stop sending new requests to that server.
+
+```text
+Load Balancer
+      |
+ ┌────┼────┐
+ ▼    ▼    ▼
+EC2  EC2  EC2
+ ✅    ❌    ✅
+
+Traffic → EC2-1 and EC2-3
+No traffic → EC2-2
+```
+
+This helps prevent users from being sent to an unhealthy server.
+
+---
+
+## How does a Load Balancer work?
+
+The basic flow is:
+
+```text
+1. User sends request
+          ↓
+2. Request reaches Load Balancer
+          ↓
+3. Load Balancer checks available backend servers
+          ↓
+4. It selects an appropriate healthy server
+          ↓
+5. Request is forwarded to that server
+          ↓
+6. Server processes the request
+          ↓
+7. Response goes back to the user
+```
+
+For example:
+
+```text
+User
+ |
+ | HTTP Request
+ ▼
+Load Balancer
+ |
+ |----> Server 1
+ |
+ |----> Server 2
+ |
+ |----> Server 3
+```
+
+The user generally communicates with the load balancer rather than directly managing which backend server handles the request.
+
+---
+
+## Load Balancer and AWS EC2
+
+A common AWS architecture is to place multiple EC2 instances behind a load balancer.
+
+```text
+                    Internet
+                       |
+                       ▼
+                 Load Balancer
+                       |
+             ┌─────────┼─────────┐
+             ▼         ▼         ▼
+           EC2-1     EC2-2     EC2-3
+             |         |         |
+             └─────────┼─────────┘
+                       ▼
+                  Application
+```
+
+This is useful because if one EC2 instance fails, other instances can continue serving requests.
+
+---
+
+## Load Balancer and Auto Scaling
+
+Load balancing becomes even more useful when combined with **Auto Scaling**.
+
+Suppose an application normally has two servers:
+
+```text
+Load Balancer
+      |
+   ┌──┴──┐
+   ▼     ▼
+ EC2    EC2
+```
+
+During a traffic spike, Auto Scaling can launch additional instances:
+
+```text
+Load Balancer
+      |
+ ┌────┼────┬────┐
+ ▼    ▼    ▼    ▼
+EC2  EC2  EC2  EC2
+```
+
+The new instances can then become available to receive traffic.
+
+When traffic decreases, unnecessary instances can be removed.
+
+So the combination provides:
+
+**Load Balancer → Traffic Distribution**
+
+**Auto Scaling → Adjust Number of Servers**
+
+Together, they help create a scalable and highly available application.
+
+---
+
+## Load Balancer in a DevOps Architecture
+
+In a typical DevOps/cloud architecture, a load balancer can sit between users and the application infrastructure.
+
+```text
+                   Users
+                     |
+                     ▼
+              Load Balancer
+                     |
+          ┌──────────┼──────────┐
+          ▼          ▼          ▼
+       Server 1   Server 2   Server 3
+          |          |          |
+          └──────────┼──────────┘
+                     ▼
+                 Database
+```
+
+In a containerized environment, the same concept can be used to distribute traffic across application workloads running on containers or Kubernetes.
+
+---
+
+## Load Balancing Algorithms
+
+A load balancer needs a mechanism to decide where incoming requests should go.
+
+Common approaches include:
+
+### Round Robin
+
+Requests are distributed sequentially:
+
+```text
+Request 1 → Server 1
+Request 2 → Server 2
+Request 3 → Server 3
+Request 4 → Server 1
+Request 5 → Server 2
+```
+
+### Least Connections
+
+Traffic is sent toward a server with fewer active connections.
+
+```text
+Server 1 → 20 connections
+Server 2 → 5 connections
+Server 3 → 12 connections
+
+New request → Server 2
+```
+
+### IP/Session-Based Distribution
+
+Traffic can be associated with a particular backend based on information such as the client's IP address or session-related requirements.
+
+The exact traffic-distribution behavior depends on the load-balancing technology being used.
+
+---
+
+## Load Balancer vs Server
+
+A load balancer is **not the application server itself**.
+
+For example:
+
+```text
+Load Balancer
+      ↓
+Routes traffic
+      ↓
+Application Servers
+      ↓
+Run application
+```
+
+The load balancer's primary responsibility is to manage and distribute incoming traffic, while the backend servers actually process the application requests.
+
+---
+
+## Simple Real-World Example
+
+Imagine a website running on three servers:
+
+```text
+                 1,000 Users
+                      |
+                      ▼
+                Load Balancer
+                 /    |    \
+                ▼     ▼     ▼
+              EC2-1 EC2-2 EC2-3
+```
+
+Instead of all 1,000 users reaching one server, the load balancer distributes the traffic across the available servers.
+
+If EC2-2 becomes unhealthy:
+
+```text
+                Load Balancer
+                 /         \
+                ▼           ▼
+              EC2-1       EC2-3
+                ✅           ✅
+
+              EC2-2 ❌
+```
+
+The load balancer can stop routing new traffic to the unhealthy instance.
+
+This improves the application's availability and reliability.
+
+---
+
+## Key Takeaways
+
+- A **Load Balancer distributes incoming traffic across multiple backend servers**.
+- It helps prevent individual servers from becoming overloaded.
+- It improves **availability, scalability, and reliability**.
+- Load balancers can perform **health checks** on backend servers.
+- They are commonly used with **EC2 instances and Auto Scaling**.
+- They can also be used in **containerized and Kubernetes-based architectures**.
+- A load balancer handles traffic distribution; the backend servers handle the actual application processing.
+- AWS provides different load-balancing technologies for different types of traffic and application requirements.
+
+### In one line:
+
+> **A Load Balancer acts as a traffic distributor between users and backend servers, directing requests to healthy and available resources to improve application availability, scalability, and performance.**
