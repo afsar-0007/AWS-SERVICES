@@ -1,0 +1,778 @@
+# AWS CloudFront
+
+Today I learned about **Amazon CloudFront**, AWS's Content Delivery Network (CDN) service. CloudFront is used to deliver websites, APIs, videos, images, and other content to users with **low latency and high transfer speeds**.
+
+## What is Amazon CloudFront?
+
+Amazon CloudFront is a globally distributed CDN that delivers content to users from locations that are geographically closer to them.
+
+Instead of every user request going directly to the origin server, CloudFront can cache frequently requested content at **Edge Locations**.
+
+### Basic Flow
+
+```text
+User
+  ↓
+CloudFront
+  ↓
+Edge Location
+  ↓
+Cache Hit → Content delivered directly
+  │
+  └── Cache Miss
+          ↓
+        Origin
+          ↓
+      Get Content
+          ↓
+    CloudFront Cache
+          ↓
+         User
+```
+
+The origin can be services such as:
+
+- Amazon S3
+- Application Load Balancer
+- EC2
+- API Gateway
+- Any HTTP/HTTPS web server
+
+---
+
+## Why Do We Need CloudFront?
+
+Suppose an application is hosted on an EC2 instance in a particular AWS Region. A user located far away from that region has to send requests over a longer network path.
+
+For example:
+
+```text
+User in India
+      ↓
+Internet
+      ↓
+EC2 in US
+```
+
+This can increase latency.
+
+With CloudFront:
+
+```text
+User in India
+      ↓
+CloudFront Edge Location
+      ↓
+Cached Content
+```
+
+If the requested content is already cached, CloudFront can return it from the nearby edge location instead of contacting the origin every time.
+
+### Main benefits
+
+- Lower latency
+- Faster content delivery
+- Reduced load on the origin server
+- Better scalability
+- Improved availability
+- HTTPS support
+- Integration with AWS security services
+- Global content distribution
+
+---
+
+# Edge Locations
+
+CloudFront uses a worldwide network of **Edge Locations**.
+
+An Edge Location is a location where CloudFront can cache and serve content closer to users.
+
+For example:
+
+```text
+                    CloudFront
+                        │
+       ┌────────────────┼────────────────┐
+       ↓                ↓                ↓
+   Edge Location    Edge Location    Edge Location
+      India            Europe             USA
+       │                │                │
+       ↓                ↓                ↓
+     Users            Users             Users
+```
+
+The goal is to serve content from a location that is closer to the user.
+
+---
+
+# Origin
+
+The **origin** is the original location from which CloudFront retrieves content when it isn't already available in the cache.
+
+Common origins include:
+
+```text
+S3 Bucket
+EC2
+Application Load Balancer
+API Gateway
+Custom HTTP Server
+```
+
+For example:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+S3 Bucket
+```
+
+Here:
+
+- CloudFront = CDN
+- S3 = Origin
+- User = Client
+
+---
+
+# CloudFront Cache
+
+One of the main features of CloudFront is caching.
+
+Suppose a website has:
+
+```text
+logo.png
+style.css
+app.js
+image.jpg
+```
+
+A user requests:
+
+```text
+example.com/logo.png
+```
+
+If the file is already cached at the relevant CloudFront edge location:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+Cache Hit
+ ↓
+logo.png
+```
+
+The origin doesn't need to be contacted.
+
+If it isn't cached:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+Cache Miss
+ ↓
+Origin
+ ↓
+CloudFront
+ ↓
+Cache the content
+ ↓
+User
+```
+
+---
+
+# Cache Hit vs Cache Miss
+
+## Cache Hit
+
+A requested object is available in the CloudFront cache.
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+Cache Hit
+ ↓
+Content
+```
+
+This is faster because CloudFront doesn't need to retrieve the object from the origin.
+
+## Cache Miss
+
+The requested object isn't currently available in the cache.
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+Cache Miss
+ ↓
+Origin
+ ↓
+Content
+ ↓
+CloudFront Cache
+ ↓
+User
+```
+
+CloudFront can then cache the response according to the configured caching behavior.
+
+---
+
+# TTL — Time To Live
+
+CloudFront uses **TTL (Time To Live)** to determine how long an object can remain cached before it needs to be checked/retrieved again according to the configured cache behavior and origin headers.
+
+For example:
+
+```text
+TTL = 1 hour
+```
+
+An object can remain cached for the configured period.
+
+After the relevant cache lifetime expires, CloudFront may need to obtain a fresh version from the origin.
+
+TTL is important because it affects the balance between:
+
+```text
+Long TTL
+→ Better caching
+→ Fewer origin requests
+
+Short TTL
+→ Fresher content
+→ More origin requests
+```
+
+---
+
+# CloudFront Distribution
+
+To use CloudFront, you create a **CloudFront distribution**.
+
+A distribution defines how CloudFront should deliver content.
+
+It contains configuration such as:
+
+- Origin
+- Cache behaviors
+- Viewer protocol policy
+- Allowed HTTP methods
+- SSL/TLS certificate
+- Cache policies
+- Security settings
+
+Conceptually:
+
+```text
+                CloudFront Distribution
+                         │
+          ┌──────────────┼──────────────┐
+          ↓              ↓              ↓
+        Origin      Cache Behavior    Security
+          │              │              │
+          ↓              ↓              ↓
+         S3          /images/*        HTTPS
+```
+
+---
+
+# Cache Behaviors
+
+CloudFront allows different behaviors for different URL paths.
+
+For example:
+
+```text
+/images/*
+    ↓
+S3
+
+/api/*
+    ↓
+ALB
+```
+
+This allows a single CloudFront distribution to handle different types of content.
+
+Example:
+
+```text
+example.com/images/logo.png
+          ↓
+       CloudFront
+          ↓
+          S3
+```
+
+While:
+
+```text
+example.com/api/users
+          ↓
+       CloudFront
+          ↓
+          ALB
+          ↓
+       Backend
+```
+
+---
+
+# Example 1 — Static Website on S3
+
+Suppose I have a static website stored in an S3 bucket:
+
+```text
+index.html
+style.css
+script.js
+images/
+```
+
+Without CloudFront:
+
+```text
+User
+ ↓
+S3
+ ↓
+Website
+```
+
+With CloudFront:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+Edge Location
+ ↓
+S3
+```
+
+If the content is cached:
+
+```text
+User
+ ↓
+CloudFront Edge Location
+ ↓
+Cached Content
+```
+
+This improves the delivery of static content to users around the world.
+
+---
+
+# Example 2 — CloudFront with an Application Load Balancer
+
+CloudFront can also be placed in front of an ALB.
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+ALB
+ ↓
+Target Group
+ ↓
+EC2
+```
+
+For example, suppose my application is running on multiple EC2 instances:
+
+```text
+                 CloudFront
+                     ↓
+                    ALB
+                     ↓
+             ┌───────┼───────┐
+             ↓       ↓       ↓
+           EC2-1   EC2-2   EC2-3
+```
+
+CloudFront can handle global content delivery while the ALB distributes application traffic across healthy backend instances.
+
+---
+
+# CloudFront and HTTPS
+
+CloudFront supports HTTPS for secure communication between users and CloudFront.
+
+A typical architecture can be:
+
+```text
+User
+ ↓
+HTTPS
+ ↓
+CloudFront
+ ↓
+HTTPS
+ ↓
+Origin
+```
+
+An SSL/TLS certificate can be configured for the CloudFront distribution, commonly using **AWS Certificate Manager (ACM)**.
+
+This allows users to securely access a domain such as:
+
+```text
+https://example.com
+```
+
+---
+
+# CloudFront and Security
+
+CloudFront can also work with AWS security services.
+
+For example:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+AWS WAF
+ ↓
+Origin
+```
+
+**AWS WAF (Web Application Firewall)** can help protect web applications from common web attacks and unwanted traffic.
+
+CloudFront can also help reduce direct exposure of the origin in appropriate architectures.
+
+---
+
+# CloudFront with AWS WAF
+
+A common production architecture is:
+
+```text
+                 Users
+                   ↓
+               CloudFront
+                   ↓
+                  WAF
+                   ↓
+                  ALB
+                   ↓
+             EC2 / ECS / EKS
+```
+
+Here:
+
+- CloudFront → Global content delivery
+- WAF → Web traffic filtering/protection
+- ALB → Application-level load balancing
+- EC2/ECS/EKS → Application workloads
+
+---
+
+# CloudFront with Route 53
+
+Route 53 can be used for DNS while CloudFront handles content delivery.
+
+Example:
+
+```text
+User
+ ↓
+example.com
+ ↓
+Route 53
+ ↓
+CloudFront
+ ↓
+Origin
+```
+
+This is a common AWS architecture for websites.
+
+---
+
+# CloudFront Invalidation
+
+Sometimes content is updated at the origin but an older version is still cached.
+
+For example:
+
+```text
+Old:
+app.js → Version 1
+```
+
+You deploy:
+
+```text
+New:
+app.js → Version 2
+```
+
+If the old object is still cached, users may temporarily receive the older version depending on the caching configuration.
+
+A **CloudFront invalidation** can be used to request that cached objects be removed so that subsequent requests retrieve the updated content.
+
+Example:
+
+```text
+Deploy new website
+       ↓
+CloudFront cache contains old files
+       ↓
+Create invalidation
+       ↓
+Users receive updated content
+```
+
+---
+
+# CloudFront for APIs
+
+CloudFront isn't only for static files.
+
+It can also be placed in front of dynamic applications and APIs.
+
+Example:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+ALB
+ ↓
+Backend API
+ ↓
+Application
+```
+
+This can provide benefits such as global entry points, TLS termination, caching where appropriate, and integration with AWS security features.
+
+However, dynamic API responses should only be cached when the caching behavior is appropriate for the application.
+
+---
+
+# CloudFront in a DevOps Architecture
+
+A production-style architecture can look like:
+
+```text
+                         Users
+                           │
+                           ▼
+                       Route 53
+                           │
+                           ▼
+                       CloudFront
+                           │
+                     ┌─────┴─────┐
+                     │           │
+                   Static      Dynamic
+                  Content       APIs
+                     │           │
+                     ▼           ▼
+                    S3          ALB
+                                 │
+                         ┌───────┼───────┐
+                         ▼       ▼       ▼
+                        EC2    EC2     EC2
+```
+
+This architecture separates:
+
+- Static content → S3
+- Global delivery → CloudFront
+- Application traffic → ALB
+- Backend workloads → EC2
+
+---
+
+# CloudFront vs S3
+
+These services have different purposes.
+
+### Amazon S3
+
+Used primarily for:
+
+```text
+Object storage
+```
+
+### CloudFront
+
+Used primarily for:
+
+```text
+Content delivery
+```
+
+They work very well together:
+
+```text
+S3
+ ↓
+CloudFront
+ ↓
+Users
+```
+
+S3 stores the content, while CloudFront distributes it efficiently.
+
+---
+
+# CloudFront vs ALB
+
+They also solve different problems.
+
+### CloudFront
+
+```text
+Global content delivery
+Caching
+CDN
+Edge locations
+```
+
+### ALB
+
+```text
+HTTP/HTTPS load balancing
+Application-level routing
+Target groups
+Health checks
+```
+
+They can be used together:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+ALB
+ ↓
+EC2/ECS/EKS
+```
+
+---
+
+# Important CloudFront Concepts
+
+For my AWS learning, the main concepts I need to remember are:
+
+1. **Distribution**
+2. **Origin**
+3. **Edge Locations**
+4. **Caching**
+5. **Cache Hit**
+6. **Cache Miss**
+7. **TTL**
+8. **Cache Behaviors**
+9. **CloudFront Invalidation**
+10. **HTTPS/SSL**
+11. **AWS WAF integration**
+12. **Route 53 integration**
+
+---
+
+# Simple Real-World Example
+
+Imagine I have a portfolio website:
+
+```text
+index.html
+style.css
+script.js
+profile.jpg
+```
+
+I upload everything to S3:
+
+```text
+S3 Bucket
+   │
+   ├── index.html
+   ├── style.css
+   ├── script.js
+   └── profile.jpg
+```
+
+Then I create a CloudFront distribution:
+
+```text
+User
+ ↓
+CloudFront
+ ↓
+S3
+```
+
+A user in India requests the website:
+
+```text
+India User
+     ↓
+CloudFront Edge Location
+     ↓
+Cached website
+```
+
+A user in Europe can be served through an appropriate CloudFront edge location closer to them.
+
+This reduces the distance content needs to travel from the origin for cacheable content and improves the user experience.
+
+---
+
+# Key Takeaway
+
+The easiest way I remember CloudFront is:
+
+```text
+CloudFront = AWS CDN
+```
+
+Its main purpose is:
+
+> **Deliver content faster by caching and serving it from locations closer to users.**
+
+The basic flow is:
+
+```text
+User
+  ↓
+CloudFront
+  ↓
+Edge Location
+  ↓
+Cache Hit → Return Content
+  │
+  └── Cache Miss
+          ↓
+        Origin
+          ↓
+    Get Content
+          ↓
+    Cache + Return
+```
+
+CloudFront is especially useful when building **globally accessible, scalable, and secure web applications** because it can work together with services such as **S3, ALB, Route 53, ACM, and AWS WAF**.
