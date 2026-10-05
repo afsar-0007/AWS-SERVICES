@@ -1,0 +1,954 @@
+# AWS CloudFormation
+
+Today I learned about **AWS CloudFormation**, an AWS service used for **Infrastructure as Code (IaC)**.
+
+CloudFormation allows us to define AWS infrastructure using a template instead of manually creating resources through the AWS Console.
+
+Instead of manually creating:
+
+- VPC
+- Subnets
+- EC2
+- Security Groups
+- Load Balancers
+- IAM resources
+- S3 Buckets
+- RDS
+- Auto Scaling Groups
+
+we can define them in a CloudFormation template and let AWS create and manage them automatically.
+
+---
+
+## What is Infrastructure as Code (IaC)?
+
+**Infrastructure as Code** means managing and provisioning infrastructure using configuration/code files instead of manually configuring resources.
+
+### Without IaC
+
+For example, suppose I need:
+
+```text
+VPC
+ ├── Subnet
+ ├── Security Group
+ ├── EC2
+ └── Load Balancer
+```
+
+I would have to manually create each resource from the AWS Console.
+
+This can be:
+
+- Time-consuming
+- Error-prone
+- Difficult to reproduce
+- Difficult to maintain
+
+### With IaC
+
+I define the infrastructure in a template:
+
+```text
+CloudFormation Template
+        ↓
+CloudFormation
+        ↓
+AWS Resources
+```
+
+Now the same infrastructure can be recreated whenever needed.
+
+---
+
+# What is AWS CloudFormation?
+
+**AWS CloudFormation is a managed IaC service that allows us to define, provision, and manage AWS resources using templates.**
+
+The templates can be written using:
+
+- YAML
+- JSON
+
+For example:
+
+```yaml
+Resources:
+  MyBucket:
+    Type: AWS::S3::Bucket
+```
+
+CloudFormation reads this template and creates the S3 bucket.
+
+---
+
+# Basic CloudFormation Architecture
+
+```text
+        CloudFormation Template
+             YAML / JSON
+                  │
+                  ▼
+           AWS CloudFormation
+                  │
+          ┌───────┼────────┐
+          ▼       ▼        ▼
+         VPC     EC2       S3
+          │
+          ▼
+       Subnets
+```
+
+The template describes **what infrastructure should exist**, and CloudFormation manages the creation and updating of those resources.
+
+---
+
+# What is a CloudFormation Template?
+
+A CloudFormation template is a file that describes the AWS infrastructure we want to create.
+
+Example:
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+
+Resources:
+
+  MyBucket:
+    Type: AWS::S3::Bucket
+```
+
+Here:
+
+```text
+MyBucket
+```
+
+is the logical name.
+
+And:
+
+```text
+AWS::S3::Bucket
+```
+
+specifies the AWS resource type.
+
+---
+
+# Important CloudFormation Template Sections
+
+A CloudFormation template can contain several sections.
+
+The important ones are:
+
+```text
+AWSTemplateFormatVersion
+Description
+Parameters
+Mappings
+Conditions
+Resources
+Outputs
+Metadata
+Rules
+Transform
+```
+
+You don't need to memorize every section initially.
+
+The most important ones for DevOps are:
+
+```text
+Parameters
+Resources
+Conditions
+Outputs
+Mappings
+```
+
+---
+
+# 1. Resources ⭐⭐⭐
+
+The **Resources** section is the most important section.
+
+It defines the AWS resources CloudFormation should create.
+
+Example:
+
+```yaml
+Resources:
+
+  MyBucket:
+    Type: AWS::S3::Bucket
+```
+
+This tells CloudFormation:
+
+> Create an S3 bucket.
+
+Another example:
+
+```yaml
+Resources:
+
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+```
+
+This defines an EC2 instance.
+
+---
+
+# 2. Parameters ⭐⭐⭐
+
+Parameters allow us to provide values when creating or updating a stack.
+
+For example:
+
+```yaml
+Parameters:
+
+  InstanceType:
+    Type: String
+    Default: t3.micro
+```
+
+Then we can reference the parameter:
+
+```yaml
+Resources:
+
+  MyInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+```
+
+Now we don't have to hard-code the instance type.
+
+For example, during deployment we could choose:
+
+```text
+t3.micro
+```
+
+or:
+
+```text
+t3.small
+```
+
+This makes the template reusable.
+
+---
+
+# 3. Outputs
+
+The **Outputs** section allows CloudFormation to return useful information after resources are created.
+
+For example:
+
+```yaml
+Outputs:
+
+  BucketName:
+    Value: !Ref MyBucket
+```
+
+After deployment, CloudFormation can display the bucket name as an output.
+
+Other examples:
+
+```text
+EC2 Instance ID
+Load Balancer DNS Name
+VPC ID
+S3 Bucket Name
+```
+
+---
+
+# 4. Mappings
+
+Mappings allow us to define static key-value information inside a template.
+
+A common use case is selecting different values depending on the AWS Region.
+
+Conceptually:
+
+```yaml
+Mappings:
+
+  RegionMap:
+    us-east-1:
+      AMI: ami-xxxxx
+
+    eu-north-1:
+      AMI: ami-yyyyy
+```
+
+Then the template can select the appropriate value based on the region.
+
+---
+
+# 5. Conditions
+
+Conditions allow CloudFormation to create resources or configure properties depending on certain conditions.
+
+For example:
+
+```text
+Environment = Production
+```
+
+Then:
+
+```text
+Production → Create resource
+Development → Don't create resource
+```
+
+This is useful when the same template needs to support multiple environments.
+
+---
+
+# CloudFormation Stack ⭐⭐⭐
+
+A **stack** is a collection of AWS resources that are created and managed together by CloudFormation.
+
+For example:
+
+```text
+CloudFormation Stack
+       │
+       ├── VPC
+       ├── Subnets
+       ├── Security Group
+       ├── EC2
+       ├── ALB
+       └── S3
+```
+
+Instead of managing every resource separately, CloudFormation manages them as part of the stack.
+
+---
+
+# Stack Lifecycle
+
+The general flow is:
+
+```text
+CloudFormation Template
+        ↓
+Create Stack
+        ↓
+CloudFormation
+        ↓
+Create AWS Resources
+        ↓
+Stack
+```
+
+If we modify the template:
+
+```text
+Updated Template
+       ↓
+Update Stack
+       ↓
+CloudFormation
+       ↓
+Modify Resources
+```
+
+If we delete the stack:
+
+```text
+Delete Stack
+       ↓
+CloudFormation
+       ↓
+Delete managed resources
+```
+
+Resource deletion behavior can depend on the resource configuration and deletion policies.
+
+---
+
+# Example — Creating an S3 Bucket
+
+A simple template:
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Simple S3 Bucket
+
+Resources:
+
+  MyBucket:
+    Type: AWS::S3::Bucket
+```
+
+Save it as:
+
+```text
+s3.yaml
+```
+
+Then create a CloudFormation stack using the template.
+
+CloudFormation creates:
+
+```text
+S3 Bucket
+```
+
+Instead of manually creating it through the AWS Console.
+
+---
+
+# Example — EC2 + Security Group
+
+We can also define multiple resources.
+
+```text
+CloudFormation
+      │
+      ├── Security Group
+      │
+      └── EC2 Instance
+```
+
+The template can define both resources and their relationship.
+
+For example:
+
+```yaml
+Resources:
+
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP
+
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+```
+
+A real template would also specify an appropriate AMI and associate the security group with the instance.
+
+---
+
+# CloudFormation Dependencies
+
+CloudFormation understands relationships between resources.
+
+For example:
+
+```text
+VPC
+ ↓
+Subnet
+ ↓
+EC2
+```
+
+If one resource depends on another, CloudFormation can determine the appropriate creation order.
+
+We can also explicitly specify dependencies using:
+
+```yaml
+DependsOn:
+```
+
+---
+
+# CloudFormation Drift Detection ⭐⭐
+
+One useful CloudFormation feature is **drift detection**.
+
+Suppose CloudFormation originally created:
+
+```text
+Security Group
+Port 80
+```
+
+Later, someone manually changes the resource through the AWS Console:
+
+```text
+Port 80
+Port 443
+```
+
+Now the actual infrastructure is different from what the template describes.
+
+This is called **configuration drift**.
+
+```text
+CloudFormation Template
+        ↓
+Expected Configuration
+
+AWS Resource
+        ↓
+Actual Configuration
+```
+
+If they differ:
+
+```text
+        DRIFT
+```
+
+CloudFormation can detect drift for supported resources.
+
+This is an important IaC concept because IaC works best when infrastructure changes are made through code rather than manually.
+
+---
+
+# Change Sets
+
+Before applying an update, CloudFormation can use **Change Sets** to show what will change.
+
+For example:
+
+```text
+Current Stack
+     ↓
+Updated Template
+     ↓
+Change Set
+     ↓
+Review Changes
+     ↓
+Execute
+```
+
+This helps reduce the risk of accidentally making unwanted infrastructure changes.
+
+---
+
+# Rollbacks ⭐⭐⭐
+
+Suppose CloudFormation is creating multiple resources:
+
+```text
+VPC       ✅
+Subnet    ✅
+Security  ✅
+EC2       ❌
+```
+
+If the stack creation fails, CloudFormation can roll back the stack according to its configured behavior.
+
+Conceptually:
+
+```text
+Create Stack
+     ↓
+Resource 1 ✅
+Resource 2 ✅
+Resource 3 ❌
+     ↓
+Rollback
+```
+
+This is useful because infrastructure deployment becomes more controlled than manually creating resources one by one.
+
+---
+
+# CloudFormation in DevOps
+
+CloudFormation becomes much more powerful when combined with CI/CD.
+
+For example:
+
+```text
+Developer
+    ↓
+Git Push
+    ↓
+GitHub
+    ↓
+GitHub Actions
+    ↓
+CloudFormation
+    ↓
+AWS Infrastructure
+```
+
+Suppose I store:
+
+```text
+infrastructure/
+    └── template.yaml
+```
+
+in GitHub.
+
+Whenever infrastructure changes:
+
+```text
+Developer
+    ↓
+Modify template
+    ↓
+Git commit
+    ↓
+Git push
+    ↓
+GitHub Actions
+    ↓
+CloudFormation
+    ↓
+Update infrastructure
+```
+
+This gives us **version-controlled infrastructure**.
+
+---
+
+# CloudFormation + GitHub Actions
+
+A DevOps workflow could look like:
+
+```text
+                GitHub
+                   │
+              Pull Request
+                   │
+                   ▼
+             GitHub Actions
+                   │
+          ┌────────┴────────┐
+          ▼                 ▼
+      Validate           Deploy
+      Template          CloudFormation
+                            │
+                            ▼
+                       AWS Resources
+```
+
+This allows infrastructure changes to go through the same development workflow as application code.
+
+---
+
+# CloudFormation in Multiple Environments
+
+One template can be reused for:
+
+```text
+Development
+Testing
+Staging
+Production
+```
+
+For example:
+
+```text
+CloudFormation Template
+        │
+   ┌────┼────┐
+   ▼    ▼    ▼
+  Dev  Stage  Prod
+```
+
+Parameters can be used to customize the infrastructure for each environment.
+
+---
+
+# CloudFormation and Reusability
+
+Instead of creating infrastructure manually every time:
+
+```text
+Create VPC
+Create subnet
+Create EC2
+Create security group
+...
+```
+
+we can create a reusable template:
+
+```text
+infrastructure.yaml
+```
+
+Then use it multiple times.
+
+This makes infrastructure:
+
+- Reproducible
+- Consistent
+- Version controlled
+- Automated
+
+---
+
+# CloudFormation vs Terraform ⭐⭐⭐
+
+This is a very important DevOps interview question.
+
+### CloudFormation
+
+```text
+AWS
+ ↓
+CloudFormation
+ ↓
+AWS Resources
+```
+
+CloudFormation is an **AWS-native IaC service**.
+
+### Terraform
+
+```text
+Terraform
+   ↓
+AWS
+Azure
+GCP
+Kubernetes
+etc.
+```
+
+Terraform is a **multi-cloud IaC tool**.
+
+### Comparison
+
+| Feature | CloudFormation | Terraform |
+|---|---|---|
+| Developed by | AWS | HashiCorp |
+| IaC | ✅ | ✅ |
+| AWS support | Excellent | Excellent |
+| Multi-cloud | Limited | ✅ |
+| Template language | YAML/JSON | HCL |
+| AWS-native | ✅ | ❌ |
+| State file | Managed by CloudFormation | Terraform state |
+| Drift detection | Supported | Terraform has planning/state-based workflows |
+| Community ecosystem | AWS-focused | Large multi-provider ecosystem |
+
+For an AWS-focused environment, CloudFormation is a very natural choice.
+
+For multi-cloud infrastructure, Terraform is often preferred.
+
+---
+
+# CloudFormation vs AWS Console
+
+### Manual approach
+
+```text
+AWS Console
+   ↓
+Click
+   ↓
+Configure
+   ↓
+Create resource
+```
+
+Problems:
+
+- Manual work
+- Human errors
+- Difficult to reproduce
+- Difficult to version
+- Difficult to audit
+
+### CloudFormation
+
+```text
+Template
+   ↓
+CloudFormation
+   ↓
+Infrastructure
+```
+
+Advantages:
+
+- Automation
+- Reproducibility
+- Version control
+- Consistency
+- Easier deployment
+- Easier environment replication
+
+---
+
+# CloudFormation in a Real DevOps Architecture
+
+A production-style architecture might look like:
+
+```text
+                  GitHub
+                    │
+                    ▼
+              GitHub Actions
+                    │
+                    ▼
+             CloudFormation
+                    │
+          ┌─────────┼─────────┐
+          ▼         ▼         ▼
+         VPC       IAM       S3
+          │
+          ▼
+      Load Balancer
+          │
+      ┌───┴───┐
+      ▼       ▼
+     EC2     EC2
+```
+
+The infrastructure itself becomes part of the codebase.
+
+---
+
+# Key Benefits of CloudFormation
+
+### 1. Infrastructure as Code
+
+Infrastructure is defined using templates.
+
+### 2. Automation
+
+Resources can be created and updated automatically.
+
+### 3. Reproducibility
+
+The same infrastructure can be recreated from the template.
+
+### 4. Version Control
+
+Templates can be stored in Git.
+
+### 5. Consistency
+
+Dev, staging, and production environments can follow the same infrastructure definition.
+
+### 6. Dependency Management
+
+CloudFormation understands relationships between resources.
+
+### 7. Rollback
+
+Failed stack operations can be rolled back.
+
+### 8. Drift Detection
+
+CloudFormation can identify configuration differences between supported resources and the expected template configuration.
+
+---
+
+# Simple Real-World Example
+
+Imagine a company wants to deploy a web application.
+
+They need:
+
+```text
+VPC
+ ├── Public Subnets
+ ├── Private Subnets
+ ├── Security Groups
+ ├── ALB
+ ├── EC2
+ └── S3
+```
+
+Instead of manually creating everything:
+
+```text
+AWS Console
+ ↓
+Create VPC
+ ↓
+Create Subnets
+ ↓
+Create Security Groups
+ ↓
+Create ALB
+ ↓
+Create EC2
+ ↓
+Create S3
+```
+
+They create:
+
+```text
+infrastructure.yaml
+```
+
+and CloudFormation provisions the infrastructure.
+
+```text
+infrastructure.yaml
+        ↓
+CloudFormation Stack
+        ↓
+AWS Infrastructure
+```
+
+If the company needs another environment:
+
+```text
+infrastructure.yaml
+        ↓
+Staging Stack
+```
+
+and:
+
+```text
+infrastructure.yaml
+        ↓
+Production Stack
+```
+
+The same infrastructure definition can be reused with different parameters.
+
+---
+
+# CloudFormation in My DevOps Learning
+
+The main thing I learned is that **CloudFormation allows AWS infrastructure to be treated like code**.
+
+Instead of manually creating infrastructure, I can define it in a YAML/JSON template, store that template in Git, review infrastructure changes, and deploy it through a CI/CD pipeline.
+
+The overall DevOps workflow can be:
+
+```text
+Write Infrastructure Code
+          ↓
+       GitHub
+          ↓
+    Pull Request
+          ↓
+     CI/CD Pipeline
+          ↓
+    CloudFormation
+          ↓
+    AWS Infrastructure
+```
+
+## Key Takeaway
+
+> **AWS CloudFormation is an AWS-native Infrastructure as Code (IaC) service that lets us define, provision, update, and manage AWS resources using YAML or JSON templates. It helps make infrastructure automated, reproducible, consistent, and version-controlled.**
+
+### One-line definition for interviews:
+
+> **CloudFormation is an AWS IaC service that allows us to define and manage AWS infrastructure as code using YAML or JSON templates.**
