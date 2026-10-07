@@ -1,0 +1,122 @@
+# AWS CodeCommit
+
+## What is AWS CodeCommit?
+
+AWS CodeCommit is a fully managed, private Git-based source control service provided by AWS. It is used to securely store, manage, and version source code in Git repositories.
+
+It is similar to GitHub or GitLab, but CodeCommit is designed to integrate closely with the AWS ecosystem and other AWS DevOps services.
+
+## Why is CodeCommit Used?
+
+CodeCommit is mainly used for storing and managing application source code. Developers can use it to create repositories, maintain branches, commit changes, collaborate with team members, and maintain the complete version history of a project.
+
+Some common uses of CodeCommit are:
+
+- Storing application source code
+- Version controlling code using Git
+- Creating and managing branches
+- Tracking changes through commits
+- Collaborating with other developers
+- Integrating source code with CI/CD pipelines
+- Controlling repository access using AWS IAM
+
+## How CodeCommit Works
+
+A developer writes or modifies code on their local machine and pushes the changes to a CodeCommit repository using Git commands.
+
+The basic workflow is:
+
+Developer → CodeCommit → CodePipeline → CodeBuild → CodeDeploy → Application
+
+Here, each service has a specific responsibility:
+
+- **CodeCommit:** Stores the source code.
+- **CodePipeline:** Automates and orchestrates the CI/CD workflow.
+- **CodeBuild:** Builds and tests the application.
+- **CodeDeploy:** Deploys the application.
+
+Therefore, CodeCommit is generally considered the **source stage** of a traditional AWS CI/CD pipeline.
+
+## Git Operations with CodeCommit
+
+Since CodeCommit is Git-based, developers can use standard Git commands such as:
+
+`git clone` – Clone a repository to the local machine.
+
+`git add` – Add changes to the staging area.
+
+`git commit` – Save changes to the local Git history.
+
+`git push` – Upload local changes to CodeCommit.
+
+`git pull` – Download the latest changes from CodeCommit.
+
+For example:
+
+```bash
+git add .
+git commit -m "Added login feature"
+git push origin main
+```
+
+## Branching in CodeCommit
+
+CodeCommit supports Git branches, which allow developers to work on different features independently.
+
+For example:
+
+main  
+├── development  
+├── feature-login  
+└── feature-payment
+
+A developer can create a feature branch, implement the changes, test them, and then merge the changes into the main branch.
+
+## Security
+
+CodeCommit integrates with AWS Identity and Access Management (IAM), which allows organizations to control access to repositories.
+
+IAM permissions can determine whether a user or role can read, write, or manage a CodeCommit repository.
+
+This helps organizations follow the **Principle of Least Privilege**, where users receive only the permissions required to perform their tasks.
+
+## Advantages of AWS CodeCommit
+
+1. Fully managed by AWS.
+2. Git-compatible and supports standard Git workflows.
+3. Provides private repositories for source code.
+4. Integrates with AWS IAM for access control.
+5. Integrates with AWS CI/CD services.
+6. Provides scalable and secure source code management.
+7. Works well with other AWS developer tools.
+
+## CodeCommit vs GitHub
+
+CodeCommit and GitHub both provide Git-based source code management.
+
+The main difference is their ecosystem. GitHub provides a large developer community and extensive third-party integrations, while CodeCommit is tightly integrated with AWS services such as IAM, CodePipeline, CodeBuild, and CodeDeploy.
+
+## Important Interview Point
+
+CodeCommit is **not a CI/CD service**. It is a **source control service**.
+
+Remember the AWS CI/CD workflow:
+
+**CodeCommit → CodePipeline → CodeBuild → CodeDeploy**
+
+- CodeCommit = Source Code
+- CodePipeline = Workflow Automation
+- CodeBuild = Build & Test
+- CodeDeploy = Deployment
+
+## Real-World Example
+
+Suppose a developer is working on a web application. The developer pushes the latest code to CodeCommit.
+
+CodeCommit stores the updated source code. This change can trigger CodePipeline, which starts the CI/CD process. CodeBuild then builds and tests the application. After a successful build, CodeDeploy can deploy the application to the required environment.
+
+This creates an automated software delivery workflow.
+
+## Key Takeaway
+
+AWS CodeCommit is a managed Git repository service that provides secure source code storage and version control. It can serve as the starting point of an AWS CI/CD pipeline, where CodePipeline handles workflow automation, CodeBuild handles building and testing, and CodeDeploy handles deployment.
