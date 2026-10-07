@@ -1,0 +1,617 @@
+# AWS CodeDeploy
+
+## What is AWS CodeDeploy?
+
+AWS CodeDeploy is a fully managed **deployment service** provided by AWS. It automates the process of deploying application code to compute environments such as **Amazon EC2 instances, on-premises servers, and AWS Lambda**.
+
+In simple terms:
+
+> **CodeDeploy takes the application artifact and automatically deploys it to the target environment.**
+
+It helps reduce manual deployment work and minimizes the risk of errors during application releases.
+
+A typical AWS CI/CD workflow is:
+
+**CodeCommit → CodePipeline → CodeBuild → CodeDeploy**
+
+Here, CodeDeploy is mainly responsible for the **deployment stage**.
+
+---
+
+## Why is CodeDeploy Used?
+
+Normally, deploying an application manually may involve several steps:
+
+1. Connect to the server.
+2. Copy the application files.
+3. Stop the existing application.
+4. Install the new version.
+5. Start the application again.
+6. Verify that the deployment was successful.
+
+CodeDeploy automates these tasks.
+
+It can be used to:
+
+- Automatically deploy application code
+- Reduce manual deployment work
+- Perform repeatable deployments
+- Deploy new application versions
+- Roll back failed deployments
+- Deploy applications to multiple servers
+- Integrate with CI/CD pipelines
+- Perform controlled production deployments
+
+---
+
+## How AWS CodeDeploy Works
+
+A typical workflow looks like:
+
+```text
+Developer
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+    ↓
+Build Artifact
+    ↓
+CodeDeploy
+    ↓
+Target Environment
+    ↓
+Application
+```
+
+CodeDeploy takes the output from the build stage and deploys it to the target environment.
+
+For example:
+
+```text
+Application Code
+      ↓
+CodeBuild
+      ↓
+application.zip
+      ↓
+CodeDeploy
+      ↓
+EC2 Instance
+      ↓
+New Application Version
+```
+
+---
+
+# Deployment Targets
+
+AWS CodeDeploy supports different deployment targets.
+
+## 1. Amazon EC2 / On-Premises
+
+CodeDeploy can deploy applications to:
+
+- Amazon EC2 instances
+- On-premises servers
+
+For example:
+
+```text
+CodeDeploy
+    ↓
+EC2 Instance
+    ↓
+Application
+```
+
+This is useful for applications running on traditional servers.
+
+---
+
+## 2. AWS Lambda
+
+CodeDeploy can also be used to control deployments of AWS Lambda functions.
+
+For example:
+
+```text
+New Lambda Version
+       ↓
+CodeDeploy
+       ↓
+Lambda Function
+```
+
+This allows organizations to perform controlled Lambda deployments.
+
+---
+
+## 3. Amazon ECS
+
+CodeDeploy can also be used with Amazon ECS for certain deployment strategies, particularly for **ECS services using blue/green deployments**.
+
+Example:
+
+```text
+CodeDeploy
+     ↓
+Amazon ECS
+     ↓
+New Task Version
+```
+
+---
+
+# AppSpec File
+
+One of the most important concepts in AWS CodeDeploy is the **AppSpec file**.
+
+The AppSpec file tells CodeDeploy:
+
+- Which files should be deployed
+- Where the files should be copied
+- Which scripts should be executed
+- Which lifecycle events should run
+
+For EC2/on-premises deployments, the AppSpec file is generally named:
+
+```text
+appspec.yml
+```
+
+A typical project might look like:
+
+```text
+my-application/
+│
+├── appspec.yml
+├── scripts/
+│   ├── install.sh
+│   ├── start.sh
+│   └── stop.sh
+│
+└── application-files/
+```
+
+---
+
+# Example AppSpec File
+
+A simple `appspec.yml` could look like:
+
+```yaml
+version: 0.0
+
+os: linux
+
+files:
+  - source: /
+    destination: /var/www/myapp
+
+hooks:
+
+  ApplicationStop:
+    - location: scripts/stop.sh
+      timeout: 300
+
+  AfterInstall:
+    - location: scripts/install.sh
+      timeout: 300
+
+  ApplicationStart:
+    - location: scripts/start.sh
+      timeout: 300
+```
+
+This tells CodeDeploy where to copy the files and which scripts should execute during different stages of deployment.
+
+---
+
+# CodeDeploy Agent
+
+For EC2/on-premises deployments, the **CodeDeploy agent** is an important component.
+
+The agent runs on the target server and communicates with the CodeDeploy service.
+
+The basic architecture is:
+
+```text
+AWS CodeDeploy
+      ↓
+CodeDeploy Agent
+      ↓
+EC2 Instance
+      ↓
+Application
+```
+
+The agent receives deployment instructions and performs the required deployment actions on the instance.
+
+---
+
+# Deployment Lifecycle
+
+During an EC2/on-premises deployment, CodeDeploy goes through different lifecycle events.
+
+Some important lifecycle events include:
+
+```text
+ApplicationStop
+      ↓
+BeforeInstall
+      ↓
+Install
+      ↓
+AfterInstall
+      ↓
+ApplicationStart
+      ↓
+ValidateService
+```
+
+These lifecycle hooks allow you to execute custom scripts during deployment.
+
+For example:
+
+### ApplicationStop
+
+Stops the currently running application.
+
+### BeforeInstall
+
+Performs tasks before the new version is installed.
+
+### AfterInstall
+
+Runs tasks after the new application files have been copied.
+
+### ApplicationStart
+
+Starts the new application version.
+
+### ValidateService
+
+Checks whether the application is running correctly after deployment.
+
+---
+
+# Deployment Strategies
+
+One of the most important concepts in CodeDeploy is the deployment strategy.
+
+Two major strategies are:
+
+## 1. In-Place Deployment
+
+In an in-place deployment, the existing application is stopped and the new version is deployed to the same instances.
+
+Example:
+
+```text
+Old Version
+     ↓
+Existing EC2
+     ↓
+Stop Application
+     ↓
+Deploy New Version
+     ↓
+Start Application
+     ↓
+New Version
+```
+
+Advantages:
+
+- Simple
+- Cost-effective
+- Does not require duplicate infrastructure
+
+Disadvantage:
+
+- There can be downtime depending on the deployment configuration.
+
+---
+
+# 2. Blue/Green Deployment
+
+In a blue/green deployment, the new application version is deployed to a separate environment before traffic is shifted to it.
+
+```text
+                 ┌──────────────┐
+                 │    Users     │
+                 └──────┬───────┘
+                        │
+                     Traffic
+                        │
+                 ┌──────▼───────┐
+                 │ Load Balancer│
+                 └──────┬───────┘
+                        │
+             ┌──────────┴──────────┐
+             ↓                     ↓
+        Blue Environment      Green Environment
+         Old Version            New Version
+```
+
+Once the new version is tested successfully, traffic can be shifted to the new environment.
+
+If something goes wrong, traffic can be shifted back to the previous version.
+
+### Advantages
+
+- Reduced downtime
+- Safer deployments
+- Easier rollback
+- Useful for production environments
+
+### Disadvantage
+
+It can require additional infrastructure, which may increase cost.
+
+---
+
+# CodeDeploy Deployment Configuration
+
+CodeDeploy provides different deployment configurations that control how many instances receive the new version at a time.
+
+For example:
+
+```text
+AllAtOnce
+HalfAtATime
+OneAtATime
+```
+
+### AllAtOnce
+
+Deploys the new version to all targeted instances at the same time.
+
+```text
+EC2-1 ── New Version
+EC2-2 ── New Version
+EC2-3 ── New Version
+```
+
+This is fast but can have greater availability risk.
+
+### OneAtATime
+
+Deploys to one instance at a time.
+
+```text
+EC2-1 → New Version
+EC2-2 → New Version
+EC2-3 → New Version
+```
+
+This can provide better availability but takes longer.
+
+---
+
+# Rollback
+
+CodeDeploy can help recover from unsuccessful deployments.
+
+For example:
+
+```text
+Version 1
+    ↓
+Deploy Version 2
+    ↓
+Deployment Failure
+    ↓
+Rollback
+    ↓
+Version 1
+```
+
+Rollback is important because it allows teams to quickly return to a known working version.
+
+The exact rollback behavior depends on the deployment configuration and how the deployment is set up.
+
+---
+
+# CodeDeploy with CodePipeline
+
+CodePipeline can use CodeDeploy as its deployment stage.
+
+The complete workflow becomes:
+
+```text
+Developer
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+    ↓
+Build Artifact
+    ↓
+CodeDeploy
+    ↓
+EC2 / Lambda / ECS
+    ↓
+Application
+```
+
+CodePipeline controls the workflow, while CodeDeploy performs the deployment.
+
+Therefore:
+
+**CodePipeline = Orchestrates**
+
+**CodeBuild = Builds and Tests**
+
+**CodeDeploy = Deploys**
+
+---
+
+# Real-World Example
+
+Suppose you have a Node.js application running on EC2.
+
+A developer pushes new code:
+
+```text
+Developer
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+```
+
+CodeBuild installs dependencies, runs tests, and creates the application artifact.
+
+```text
+Build Artifact
+      ↓
+CodeDeploy
+      ↓
+EC2
+```
+
+CodeDeploy then:
+
+1. Stops the existing application.
+2. Copies the new application files.
+3. Runs the required deployment scripts.
+4. Starts the new application.
+5. Validates the application.
+
+The result is an automated deployment process.
+
+---
+
+# CodeDeploy vs CodeBuild
+
+| Feature | CodeBuild | CodeDeploy |
+|---|---|---|
+| Main Purpose | Build & Test | Deployment |
+| Compile Code | Yes | No |
+| Run Tests | Yes | No |
+| Create Build Artifact | Yes | No |
+| Deploy Application | No | Yes |
+| Deployment Scripts | No | Yes |
+| Rollback Support | Not its primary role | Yes |
+| AppSpec File | No | Yes |
+
+Remember:
+
+**CodeBuild → Creates the deployable artifact**
+
+**CodeDeploy → Deploys the artifact**
+
+---
+
+# CodeDeploy vs CodePipeline
+
+| Feature | CodePipeline | CodeDeploy |
+|---|---|---|
+| Main Purpose | CI/CD Orchestration | Application Deployment |
+| Controls Stages | Yes | No |
+| Builds Code | No | No |
+| Deploys Code | Through deployment actions | Yes |
+| Manual Approval | Yes | No |
+| Deployment Strategies | Orchestrates deployment actions | Performs supported deployment strategies |
+
+---
+
+# Important Interview Questions
+
+### Q1. What is AWS CodeDeploy?
+
+**Answer:**
+
+AWS CodeDeploy is a managed deployment service that automates application deployments to supported environments such as EC2, on-premises servers, Lambda, and ECS.
+
+### Q2. What is an AppSpec file?
+
+**Answer:**
+
+The AppSpec file is a configuration file used by CodeDeploy to define the files to be deployed and the scripts that should execute during different deployment lifecycle events.
+
+### Q3. What is the CodeDeploy agent?
+
+**Answer:**
+
+The CodeDeploy agent is software installed on EC2 or on-premises instances that communicates with CodeDeploy and executes deployment instructions on the target machine.
+
+### Q4. What is the difference between in-place and blue/green deployment?
+
+**Answer:**
+
+In an **in-place deployment**, the existing environment is updated with the new application version.
+
+In a **blue/green deployment**, the new version is deployed to a separate environment and traffic is shifted to it after validation.
+
+### Q5. Does CodeDeploy build the application?
+
+No.
+
+CodeDeploy is responsible for **deployment**, not building the application.
+
+Usually:
+
+```text
+CodeBuild → Build
+CodeDeploy → Deploy
+```
+
+---
+
+# Complete AWS CI/CD Workflow
+
+Now that we have covered all four services, the complete workflow is:
+
+```text
+                  AWS CI/CD PIPELINE
+
+Developer
+    │
+    │ Push Code
+    ↓
+┌──────────────┐
+│  CodeCommit  │
+│ Source Code  │
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│ CodePipeline │
+│ Orchestration│
+└──────┬───────┘
+       ↓
+┌──────────────┐
+│  CodeBuild   │
+│ Build + Test │
+└──────┬───────┘
+       ↓
+  Build Artifact
+       ↓
+┌──────────────┐
+│  CodeDeploy  │
+│  Deployment  │
+└──────┬───────┘
+       ↓
+   Application
+```
+
+## Easy Memory Trick
+
+**Commit → Pipeline → Build → Deploy**
+
+- **CodeCommit** → Stores the source code
+- **CodePipeline** → Automates the workflow
+- **CodeBuild** → Builds and tests the code
+- **CodeDeploy** → Deploys the application
+
+## Key Takeaway
+
+AWS CodeDeploy is a managed deployment service that automates the deployment of application versions to supported compute environments. It supports deployment strategies such as **in-place and blue/green deployments**, provides lifecycle hooks for running deployment scripts, and can integrate with CodePipeline to create a complete automated CI/CD workflow.
