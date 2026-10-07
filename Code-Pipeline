@@ -1,0 +1,443 @@
+# AWS CodePipeline
+
+## What is AWS CodePipeline?
+
+AWS CodePipeline is a fully managed **Continuous Integration and Continuous Delivery (CI/CD) service** provided by AWS. It is used to automate the different stages involved in delivering software from source code to deployment.
+
+In simple terms, CodePipeline acts as an **orchestrator** that connects different AWS services and automates the software delivery process.
+
+For example:
+
+**CodeCommit → CodePipeline → CodeBuild → CodeDeploy**
+
+CodePipeline monitors changes in the source code and automatically moves the application through different stages such as building, testing, and deployment.
+
+---
+
+## Why is CodePipeline Used?
+
+Without a CI/CD pipeline, developers may have to manually perform several steps:
+
+1. Get the latest source code.
+2. Build the application.
+3. Run tests.
+4. Create the required artifacts.
+5. Deploy the application.
+6. Verify the deployment.
+
+CodePipeline automates these steps and creates a repeatable software delivery workflow.
+
+It can help organizations:
+
+- Automate software releases
+- Reduce manual deployment work
+- Detect source code changes
+- Build and test applications automatically
+- Deploy applications automatically
+- Create consistent release processes
+- Integrate different AWS and third-party DevOps tools
+
+---
+
+## How AWS CodePipeline Works
+
+A typical AWS CI/CD workflow can look like this:
+
+```text
+Developer
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+    ↓
+CodeDeploy
+    ↓
+Application
+```
+
+CodePipeline connects these different stages and controls the flow of the application.
+
+For example:
+
+```text
+Source
+  ↓
+Build
+  ↓
+Test
+  ↓
+Deploy
+```
+
+Whenever new code is pushed to the source repository, CodePipeline can automatically start the pipeline and move the changes through the configured stages.
+
+---
+
+## Main Stages of CodePipeline
+
+A CodePipeline generally consists of different stages.
+
+### 1. Source Stage
+
+The Source stage retrieves the application's source code.
+
+Possible source providers include services such as:
+
+- AWS CodeCommit
+- Amazon S3
+- GitHub
+- Other supported source providers
+
+Example:
+
+```text
+Developer
+   ↓
+Push Code
+   ↓
+CodeCommit
+   ↓
+Source Stage
+```
+
+The source stage provides the code that will be processed by the remaining stages.
+
+---
+
+### 2. Build Stage
+
+The Build stage is responsible for building and testing the application.
+
+AWS CodeBuild is commonly used for this stage.
+
+For example:
+
+```text
+Source Code
+    ↓
+CodeBuild
+    ↓
+Compile
+    ↓
+Run Tests
+    ↓
+Create Build Artifact
+```
+
+The output of the build process can then be passed to the next stage.
+
+---
+
+### 3. Deploy Stage
+
+The Deploy stage takes the build artifact and deploys it to the target environment.
+
+AWS CodeDeploy is commonly used for deployment to supported compute environments.
+
+For example:
+
+```text
+Build Artifact
+      ↓
+CodeDeploy
+      ↓
+EC2
+      ↓
+Application Running
+```
+
+CodePipeline can also integrate with other deployment services depending on the application's architecture.
+
+---
+
+## Important Components of CodePipeline
+
+### Pipeline
+
+A pipeline represents the complete automated workflow for delivering an application.
+
+Example:
+
+```text
+MyApplicationPipeline
+
+Source → Build → Test → Deploy
+```
+
+### Stage
+
+A stage represents a major phase of the pipeline.
+
+Examples:
+
+```text
+Source
+Build
+Test
+Deploy
+```
+
+### Action
+
+An action is a specific task performed inside a stage.
+
+For example, a Build stage may contain a CodeBuild action.
+
+```text
+Build Stage
+     ↓
+CodeBuild Action
+```
+
+### Artifact
+
+An artifact is a file or collection of files produced by one stage and passed to another stage.
+
+For example:
+
+```text
+Source Code
+    ↓
+Build
+    ↓
+Application Artifact
+    ↓
+Deploy
+```
+
+The artifact allows different stages of the pipeline to share the output produced by previous stages.
+
+---
+
+## Example of a Complete Pipeline
+
+Suppose we have a Node.js application.
+
+The workflow could be:
+
+```text
+Developer
+    ↓
+Push Code
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+    ├── Install Dependencies
+    ├── Run Tests
+    └── Build Application
+    ↓
+Build Artifact
+    ↓
+CodeDeploy
+    ↓
+EC2
+    ↓
+Application
+```
+
+Once the developer pushes new code, the pipeline can automatically execute the configured stages.
+
+This is the main purpose of CI/CD: **automating the software delivery process.**
+
+---
+
+## CodePipeline and CodeCommit
+
+CodeCommit is responsible for storing the source code, while CodePipeline is responsible for orchestrating the workflow.
+
+```text
+CodeCommit
+    ↓
+Stores Source Code
+
+CodePipeline
+    ↓
+Controls the CI/CD Workflow
+```
+
+So:
+
+**CodeCommit = Where the code is stored**
+
+**CodePipeline = How the code moves through the delivery process**
+
+---
+
+## CodePipeline and CodeBuild
+
+CodePipeline does not actually build the application itself.
+
+Instead, it can trigger CodeBuild to perform the build and testing operations.
+
+```text
+CodePipeline
+      ↓
+Triggers
+      ↓
+CodeBuild
+      ↓
+Build + Test
+```
+
+This separation of responsibilities is important.
+
+---
+
+## CodePipeline and CodeDeploy
+
+Similarly, CodePipeline does not perform the actual application deployment itself when CodeDeploy is used.
+
+Instead, it triggers CodeDeploy.
+
+```text
+CodePipeline
+      ↓
+Triggers
+      ↓
+CodeDeploy
+      ↓
+Application Deployment
+```
+
+---
+
+## Manual Approval
+
+CodePipeline can also include a **manual approval stage**.
+
+This is useful when an organization wants someone to review the application before production deployment.
+
+Example:
+
+```text
+Source
+  ↓
+Build
+  ↓
+Test
+  ↓
+Manual Approval
+  ↓
+Production Deployment
+```
+
+For example, a development team may automatically deploy an application to a staging environment but require approval before deploying it to production.
+
+---
+
+## Benefits of AWS CodePipeline
+
+### 1. Automation
+
+It automates the software release process and reduces manual work.
+
+### 2. Faster Releases
+
+Code changes can move through build, test, and deployment stages automatically.
+
+### 3. Consistent Deployments
+
+The same pipeline can be used repeatedly, reducing human errors.
+
+### 4. AWS Integration
+
+CodePipeline integrates with AWS services such as CodeCommit, CodeBuild, and CodeDeploy.
+
+### 5. Third-Party Integration
+
+It can also integrate with supported external development and deployment tools.
+
+### 6. Continuous Delivery
+
+It enables organizations to continuously deliver tested software to different environments.
+
+---
+
+## CodePipeline vs CodeCommit
+
+| Feature | CodeCommit | CodePipeline |
+|---|---|---|
+| Main Purpose | Source Control | CI/CD Orchestration |
+| Stores Code | Yes | No |
+| Git Repository | Yes | No |
+| Build Application | No | No |
+| Deploy Application | No | No |
+| Automates Workflow | No | Yes |
+| Pipeline Management | No | Yes |
+
+---
+
+## Important Interview Point
+
+A common interview question is:
+
+**What is the difference between CodeCommit and CodePipeline?**
+
+Answer:
+
+> AWS CodeCommit is a managed Git-based source control service used to store and version source code, while AWS CodePipeline is a CI/CD orchestration service used to automate the movement of code through different stages such as source, build, test, and deployment.
+
+---
+
+## Important Terms to Remember
+
+**Source:** Where the application code comes from.
+
+**Stage:** A major phase of the pipeline.
+
+**Action:** A specific operation performed within a stage.
+
+**Artifact:** Output produced by one stage and passed to another stage.
+
+**Pipeline:** The complete automated CI/CD workflow.
+
+**Manual Approval:** A step that requires human approval before continuing.
+
+---
+
+## Real-World Example
+
+Imagine a developer modifies a web application and pushes the changes to CodeCommit.
+
+CodePipeline detects the change and starts the pipeline.
+
+```text
+CodeCommit
+    ↓
+Source Stage
+    ↓
+CodeBuild
+    ↓
+Build + Test
+    ↓
+Artifact
+    ↓
+Manual Approval
+    ↓
+CodeDeploy
+    ↓
+Production
+```
+
+This means the developer does not have to manually build and deploy the application every time a change is made.
+
+---
+
+## Key Takeaway
+
+AWS CodePipeline is a managed CI/CD orchestration service that automates the flow of application changes through different stages such as **source, build, test, approval, and deployment**.
+
+The easiest way to remember its role is:
+
+**CodeCommit → Stores the Code**
+
+**CodePipeline → Controls the Pipeline**
+
+**CodeBuild → Builds & Tests the Code**
+
+**CodeDeploy → Deploys the Application**
