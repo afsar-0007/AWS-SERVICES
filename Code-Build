@@ -1,0 +1,712 @@
+# AWS CodeBuild
+
+## What is AWS CodeBuild?
+
+AWS CodeBuild is a fully managed **Continuous Integration (CI) service** provided by AWS. It is used to **compile source code, run tests, perform code analysis, and produce build artifacts** that can be used for deployment.
+
+In simple terms:
+
+> **CodeBuild takes source code and converts it into a tested, deployable application.**
+
+CodeBuild removes the need to manage your own build servers. AWS provides the required compute environment to execute the build process.
+
+A typical AWS CI/CD workflow is:
+
+**CodeCommit → CodePipeline → CodeBuild → CodeDeploy**
+
+Here, CodeBuild is mainly responsible for the **build and testing stage**.
+
+---
+
+## Why is CodeBuild Used?
+
+When developers push code to a repository, the application usually needs to be built and tested before it can be deployed.
+
+For example, a Java application may require:
+
+```text
+Source Code
+    ↓
+Install Dependencies
+    ↓
+Compile Code
+    ↓
+Run Tests
+    ↓
+Create JAR/WAR
+    ↓
+Deploy
+```
+
+CodeBuild automates these build-related tasks.
+
+It can be used to:
+
+- Compile source code
+- Install dependencies
+- Run unit tests
+- Run code analysis
+- Build applications
+- Build Docker images
+- Create deployment artifacts
+- Store build artifacts
+- Integrate with CI/CD pipelines
+
+---
+
+## How AWS CodeBuild Works
+
+A typical CodeBuild workflow looks like:
+
+```text
+Source Code
+    ↓
+CodeBuild
+    ↓
+Install Dependencies
+    ↓
+Build
+    ↓
+Test
+    ↓
+Package
+    ↓
+Build Artifact
+```
+
+For example, if a developer pushes a Java application:
+
+```text
+Java Source Code
+      ↓
+Install Maven Dependencies
+      ↓
+mvn test
+      ↓
+mvn package
+      ↓
+Application JAR
+```
+
+The generated JAR file can then be passed to the deployment stage.
+
+---
+
+# CodeBuild in AWS CI/CD
+
+CodeBuild usually works together with CodePipeline.
+
+```text
+Developer
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+    ↓
+Build + Test
+    ↓
+Artifact
+    ↓
+CodeDeploy
+    ↓
+Application
+```
+
+CodePipeline controls the workflow, while CodeBuild performs the actual build and testing operations.
+
+Therefore:
+
+**CodePipeline = Orchestrates**
+
+**CodeBuild = Builds and Tests**
+
+---
+
+# What is a Build Project?
+
+A **Build Project** is the configuration that tells CodeBuild how to execute a build.
+
+A build project defines things such as:
+
+- Source location
+- Build environment
+- Operating system
+- Runtime
+- Compute resources
+- Build commands
+- Environment variables
+- Artifacts
+- Logs
+
+For example:
+
+```text
+Build Project
+│
+├── Source
+├── Environment
+├── Build Commands
+├── Environment Variables
+├── Artifacts
+└── Logs
+```
+
+---
+
+# Build Environment
+
+The build environment is the environment in which CodeBuild executes the build commands.
+
+It contains the tools and runtime required to build your application.
+
+For example, depending on your project, you may need:
+
+- Java
+- Python
+- Node.js
+- Go
+- Docker
+- Maven
+- Gradle
+
+The build environment can be configured according to the application's requirements.
+
+Example:
+
+```text
+CodeBuild Environment
+
+OS: Linux
+Runtime: Java
+Compute: Selected AWS compute environment
+Build Tool: Maven
+```
+
+---
+
+# buildspec.yml
+
+One of the most important concepts in AWS CodeBuild is **buildspec.yml**.
+
+A `buildspec.yml` file contains the commands and configuration that CodeBuild uses to run the build.
+
+It is normally placed in the root directory of the source repository.
+
+Example project:
+
+```text
+my-application/
+│
+├── src/
+├── pom.xml
+├── buildspec.yml
+└── README.md
+```
+
+The `buildspec.yml` file tells CodeBuild what commands should be executed during different phases of the build.
+
+---
+
+# Structure of buildspec.yml
+
+A typical `buildspec.yml` can contain:
+
+```text
+phases
+    ├── install
+    ├── pre_build
+    ├── build
+    └── post_build
+
+artifacts
+```
+
+Example:
+
+```yaml
+version: 0.2
+
+phases:
+
+  install:
+    commands:
+      - echo Installing dependencies
+
+  pre_build:
+    commands:
+      - echo Running pre-build steps
+
+  build:
+    commands:
+      - echo Building application
+      - mvn package
+
+  post_build:
+    commands:
+      - echo Build completed
+
+artifacts:
+  files:
+    - target/*.jar
+```
+
+This file tells CodeBuild what to do during each stage of the build.
+
+---
+
+# Build Phases
+
+CodeBuild provides different build phases.
+
+## 1. Install
+
+The `install` phase is used to install dependencies or prepare the build environment.
+
+Example:
+
+```yaml
+install:
+  commands:
+    - npm install
+```
+
+---
+
+## 2. Pre-build
+
+The `pre_build` phase is used for tasks that should happen before the actual build.
+
+For example:
+
+```yaml
+pre_build:
+  commands:
+    - echo Running tests
+```
+
+It can also be used for authentication or preparing required resources.
+
+---
+
+## 3. Build
+
+The `build` phase contains the main build commands.
+
+For example:
+
+```yaml
+build:
+  commands:
+    - npm run build
+```
+
+or:
+
+```yaml
+build:
+  commands:
+    - mvn package
+```
+
+---
+
+## 4. Post-build
+
+The `post_build` phase runs after the main build process.
+
+It can be used for tasks such as:
+
+- Packaging
+- Notifications
+- Docker image operations
+- Cleanup
+- Preparing deployment artifacts
+
+Example:
+
+```yaml
+post_build:
+  commands:
+    - echo Build completed
+```
+
+---
+
+# Artifacts
+
+An **artifact** is the output generated by the build process.
+
+For example:
+
+```text
+Source Code
+    ↓
+CodeBuild
+    ↓
+Build
+    ↓
+application.jar
+```
+
+The artifact can then be passed to the deployment stage.
+
+Artifacts can be stored in services such as **Amazon S3**, depending on the configured pipeline/build workflow.
+
+---
+
+# Example: Java Application
+
+Suppose we have a Java Maven project:
+
+```text
+my-java-app/
+│
+├── src/
+├── pom.xml
+└── buildspec.yml
+```
+
+The buildspec could contain:
+
+```yaml
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - mvn test
+      - mvn package
+
+artifacts:
+  files:
+    - target/*.jar
+```
+
+The workflow becomes:
+
+```text
+Java Source Code
+       ↓
+CodeBuild
+       ↓
+mvn test
+       ↓
+mvn package
+       ↓
+JAR File
+       ↓
+Deployment
+```
+
+---
+
+# CodeBuild and Docker
+
+CodeBuild can also be used to build Docker images.
+
+For example:
+
+```text
+Source Code
+    ↓
+CodeBuild
+    ↓
+docker build
+    ↓
+Docker Image
+    ↓
+Amazon ECR
+```
+
+A typical containerized workflow can look like:
+
+```text
+Developer
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+    ↓
+Docker Build
+    ↓
+Amazon ECR
+    ↓
+Deployment
+```
+
+This is especially useful for containerized applications.
+
+---
+
+# Environment Variables
+
+CodeBuild supports environment variables that can be used to provide configuration values to the build process.
+
+For example:
+
+```text
+APP_ENV=production
+APP_VERSION=1.0
+```
+
+These variables can be accessed by build commands.
+
+Environment variables are useful for making builds configurable without hardcoding values directly into scripts.
+
+Sensitive information should be handled securely using appropriate AWS secret-management mechanisms rather than hardcoding secrets in `buildspec.yml`.
+
+---
+
+# Logs and Monitoring
+
+CodeBuild provides build logs that help developers understand what happened during the build.
+
+Logs can be integrated with **Amazon CloudWatch Logs**.
+
+For example:
+
+```text
+CodeBuild
+    ↓
+Build Logs
+    ↓
+CloudWatch Logs
+```
+
+If a build fails, developers can inspect the logs to identify the problem.
+
+Example:
+
+```text
+Build Failed
+     ↓
+Check CodeBuild Logs
+     ↓
+Identify Error
+     ↓
+Fix Code
+     ↓
+Run Build Again
+```
+
+---
+
+# CodeBuild with CodePipeline
+
+CodePipeline can trigger CodeBuild automatically whenever a new source-code change is detected.
+
+Example:
+
+```text
+Developer
+    ↓
+Push Code
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+    ├── Install
+    ├── Build
+    ├── Test
+    └── Package
+    ↓
+Artifact
+    ↓
+Deployment
+```
+
+This creates an automated CI workflow.
+
+---
+
+# Benefits of AWS CodeBuild
+
+### 1. Fully Managed
+
+AWS manages the underlying build infrastructure.
+
+### 2. No Build Server Management
+
+You don't need to maintain your own Jenkins/build server infrastructure just to execute builds.
+
+### 3. Scalable
+
+CodeBuild can provide compute resources for build jobs as needed.
+
+### 4. Supports Multiple Languages
+
+It can be used with technologies such as:
+
+- Java
+- Python
+- Node.js
+- Go
+- .NET
+- Ruby
+- PHP
+
+### 5. Docker Support
+
+CodeBuild can build container images and work with container registries such as Amazon ECR.
+
+### 6. CI/CD Integration
+
+CodeBuild integrates naturally with CodePipeline and other AWS services.
+
+### 7. Pay for Build Usage
+
+You generally pay based on the build compute resources and duration used rather than maintaining a continuously running build server.
+
+---
+
+# CodeBuild vs Jenkins
+
+| Feature | AWS CodeBuild | Jenkins |
+|---|---|---|
+| Management | Fully managed | Self-managed |
+| Infrastructure | AWS manages it | You manage servers/infrastructure |
+| Configuration | AWS Console / buildspec | Jenkins configuration / Jenkinsfile |
+| Scaling | Managed by AWS | Must be configured |
+| AWS Integration | Excellent | Requires integration |
+| Maintenance | Low | Higher |
+| Plugins | Limited compared with Jenkins | Large plugin ecosystem |
+
+CodeBuild is useful when you want a managed AWS-native build service, while Jenkins provides greater customization and a very large plugin ecosystem but requires more infrastructure management.
+
+---
+
+# Important Interview Questions
+
+### Q1. What is AWS CodeBuild?
+
+**Answer:**
+
+AWS CodeBuild is a fully managed CI service that compiles source code, runs tests, performs build operations, and produces artifacts required for deployment.
+
+### Q2. What is buildspec.yml?
+
+**Answer:**
+
+`buildspec.yml` is a configuration file used by AWS CodeBuild to define build commands and phases such as install, pre-build, build, and post-build.
+
+### Q3. Does CodeBuild deploy applications?
+
+Not primarily.
+
+CodeBuild is mainly responsible for **building and testing** the application.
+
+Deployment is handled by services such as CodeDeploy or other deployment targets integrated into the pipeline.
+
+### Q4. What is an artifact?
+
+An artifact is the output generated by the build process that can be passed to a later stage of the CI/CD pipeline.
+
+For example:
+
+```text
+Source Code
+    ↓
+CodeBuild
+    ↓
+application.jar
+    ↓
+CodeDeploy
+```
+
+### Q5. What is the difference between CodePipeline and CodeBuild?
+
+**CodePipeline** orchestrates the complete CI/CD workflow.
+
+**CodeBuild** performs the actual build and testing operations.
+
+Remember:
+
+**CodePipeline = Workflow**
+
+**CodeBuild = Build + Test**
+
+---
+
+# Real-World Example
+
+Suppose you have a Go application stored in CodeCommit.
+
+The developer pushes new code:
+
+```text
+Developer
+    ↓
+CodeCommit
+    ↓
+CodePipeline
+    ↓
+CodeBuild
+```
+
+CodeBuild then executes commands such as:
+
+```bash
+go test ./...
+go build -o application
+```
+
+The generated application becomes the build artifact.
+
+```text
+Go Source Code
+      ↓
+CodeBuild
+      ↓
+go test
+      ↓
+go build
+      ↓
+Application Artifact
+      ↓
+CodeDeploy / Deployment Service
+```
+
+This allows the application to be automatically built and tested whenever new code is pushed.
+
+---
+
+# Complete AWS CI/CD Flow
+
+The four services can be remembered as:
+
+```text
+CodeCommit
+     ↓
+Stores the source code
+     ↓
+CodePipeline
+     ↓
+Orchestrates the workflow
+     ↓
+CodeBuild
+     ↓
+Builds and tests the code
+     ↓
+CodeDeploy
+     ↓
+Deploys the application
+```
+
+## Easy Memory Trick
+
+**Commit → Pipeline → Build → Deploy**
+
+- **CodeCommit** → Store Code
+- **CodePipeline** → Automate Workflow
+- **CodeBuild** → Build & Test
+- **CodeDeploy** → Deploy Application
+
+## Key Takeaway
+
+AWS CodeBuild is a fully managed continuous integration service that provides a build environment for compiling source code, installing dependencies, running tests, building applications or Docker images, and generating artifacts. It is commonly used as the **Build stage of an AWS CodePipeline**.
