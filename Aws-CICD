@@ -1,0 +1,163 @@
+# AWS CI/CD Services
+
+AWS provides a set of DevOps services that can be combined to build a complete **CI/CD pipeline** for automating the software development and deployment process.
+
+The four core services I learned are:
+
+**CodeCommit → CodePipeline → CodeBuild → CodeDeploy**
+
+---
+
+## 1. AWS CodeCommit
+
+**AWS CodeCommit** is a fully managed **Git-based source control service** provided by AWS.
+
+It is used to store and manage application source code, configuration files, infrastructure code, and other project files in private Git repositories.
+
+### Key Points:
+- Managed Git repository hosted by AWS.
+- Supports Git commands such as `clone`, `commit`, `push`, `pull`, and `branch`.
+- Integrates with other AWS DevOps services.
+- Provides repository-level access control through IAM.
+- Can be used as a source stage in CI/CD pipelines.
+
+**In simple words:**  
+CodeCommit is the **source code repository** where developers store and manage their code.
+
+---
+
+## 2. AWS CodePipeline
+
+**AWS CodePipeline** is a fully managed **continuous delivery service** that automates the flow of code through different stages of the software release process.
+
+A pipeline can automatically detect changes in the source repository and move the code through build, testing, and deployment stages.
+
+### Common Pipeline Flow:
+
+```text
+Developer
+   ↓
+CodeCommit
+   ↓
+CodePipeline
+   ↓
+CodeBuild
+   ↓
+CodeDeploy
+   ↓
+Application
+```
+
+### Key Points:
+- Automates the CI/CD workflow.
+- Connects different AWS and third-party services.
+- Supports multiple stages such as Source, Build, Test, and Deploy.
+- Can automatically trigger when new code is pushed.
+- Reduces manual steps in software delivery.
+
+**In simple words:**  
+CodePipeline acts as the **orchestrator** that moves code from one stage to another.
+
+---
+
+## 3. AWS CodeBuild
+
+**AWS CodeBuild** is a fully managed **continuous integration (CI) service** used to compile source code, run tests, perform code analysis, and create build artifacts.
+
+It automatically provides the required build environment, so there is no need to manage build servers manually.
+
+### Key Points:
+- Compiles and builds application code.
+- Runs automated tests.
+- Supports multiple programming languages and build environments.
+- Can create artifacts such as ZIP files, JAR files, or container images.
+- Uses a `buildspec.yml` file to define build commands.
+- Scales automatically based on build requirements.
+
+Example:
+
+```yaml
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - echo "Building application..."
+      - echo "Running tests..."
+```
+
+**In simple words:**  
+CodeBuild is responsible for **building and testing the application**.
+
+---
+
+## 4. AWS CodeDeploy
+
+**AWS CodeDeploy** is a managed deployment service that automates the deployment of application code to supported compute environments such as **Amazon EC2, Lambda, and Amazon ECS**.
+
+It helps deploy new application versions without manually copying files or restarting services.
+
+### Key Points:
+- Automates application deployments.
+- Supports different deployment strategies.
+- Helps reduce deployment errors.
+- Supports deployment configurations such as:
+  - In-place deployment
+  - Blue/Green deployment
+- Can automatically integrate with CodePipeline.
+- Provides deployment monitoring and rollback capabilities.
+
+**In simple words:**  
+CodeDeploy is responsible for **deploying the built application to the target environment**.
+
+---
+
+# Complete AWS CI/CD Workflow
+
+The four services can work together as a complete CI/CD pipeline:
+
+```text
+             Developer
+                 │
+                 ▼
+          ┌─────────────┐
+          │  CodeCommit │
+          │ Source Code │
+          └──────┬──────┘
+                 │
+                 ▼
+          ┌─────────────┐
+          │ CodePipeline│
+          │ Orchestrator│
+          └──────┬──────┘
+                 │
+                 ▼
+          ┌─────────────┐
+          │  CodeBuild  │
+          │ Build + Test│
+          └──────┬──────┘
+                 │
+                 ▼
+          ┌─────────────┐
+          │  CodeDeploy │
+          │  Deployment │
+          └──────┬──────┘
+                 │
+                 ▼
+             Application
+```
+
+### Overall Responsibility
+
+| Service | Main Responsibility |
+|---|---|
+| **CodeCommit** | Store and manage source code |
+| **CodePipeline** | Orchestrate the CI/CD workflow |
+| **CodeBuild** | Build and test the application |
+| **CodeDeploy** | Deploy the application |
+
+### Key Takeaway
+
+**CodeCommit** stores the code, **CodePipeline** manages the workflow, **CodeBuild** builds and tests the code, and **CodeDeploy** deploys the application.
+
+Together, these services can automate the complete **CI/CD lifecycle**, from a developer pushing code to delivering a new version of the application.
