@@ -1,0 +1,306 @@
+# AWS IAM (Identity and Access Management)
+
+## 1. What is AWS IAM?
+
+AWS IAM (Identity and Access Management) is a service that helps securely manage access to AWS resources. It allows us to control **who can access AWS, which resources they can access, and what actions they can perform**.
+
+Using IAM, we can create users, organize users into groups, assign permissions through policies, and create roles that AWS services or trusted identities can assume.
+
+For example, in an organization, a developer may need permission to upload files to an S3 bucket but should not be allowed to delete EC2 instances. IAM helps enforce these access restrictions.
+
+**Key point:** IAM follows the principle of least privilege, which means granting only the permissions required to perform a particular task.
+
+## 2. Important Features of IAM
+
+- **Access Control:** Defines which AWS resources a user or role can access.
+- **Authentication:** Verifies the identity of a user or workload.
+- **Authorization:** Determines which actions an authenticated identity is allowed to perform.
+- **Fine-Grained Permissions:** Grants permissions for specific services, resources, and actions.
+- **Multi-Factor Authentication (MFA):** Adds another verification factor to help secure access.
+- **Temporary Credentials:** Supports short-lived credentials through AWS Security Token Service (STS).
+- **Centralized Management:** Manages access permissions across supported AWS services.
+- **Auditing:** Works with services such as AWS CloudTrail to help track API activity.
+
+## 3. Main Components of IAM
+
+### A. IAM Users
+
+An IAM user is an identity created in an AWS account for a person or application that needs specific AWS permissions.
+
+An IAM user can have:
+- A console password for console access, if configured.
+- Access keys for programmatic access, if configured.
+- Permissions assigned directly or inherited through groups.
+
+**Example:** Suppose a developer needs to upload files to Amazon S3. We can create an IAM user and grant only the required S3 permissions.
+
+**Best practice:** For human users, prefer federation or IAM Identity Center where appropriate. Avoid creating long-term access keys unless necessary.
+
+### B. IAM Groups
+
+An IAM group is a collection of IAM users. We can attach policies to a group so its users receive the permissions defined by those policies.
+
+**Example:** An organization has five developers who all need read-only access to EC2. Instead of assigning the same policy individually, we can place them in an EC2-readers group and attach an appropriate policy.
+
+**Benefits:**
+- Simplifies permission management.
+- Makes it easier to maintain consistent permissions.
+- Reduces repetitive administrative work.
+
+**Important:** IAM groups contain users, not roles or other groups. Groups are a permission-management mechanism rather than identities that can sign in.
+
+### C. IAM Policies
+
+An IAM policy is a document that defines permissions. Policies specify which actions are allowed or denied on which resources, sometimes under particular conditions.
+
+Policies are generally written in JSON.
+
+**Example: An S3 read-only policy**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject"
+      ],
+      "Resource": "arn:aws:s3:::my-learning-bucket/*"
+    }
+  ]
+}
+```
+
+This policy allows reading objects from the specified bucket. It does not, by itself, grant permission to list the bucket or upload and delete objects.
+
+Replace `my-learning-bucket` with your actual bucket name before using the policy.
+
+#### Important Policy Elements
+
+- **Version:** Specifies the policy language version.
+- **Statement:** Contains one or more permission statements.
+- **Effect:** Specifies `Allow` or `Deny`.
+- **Action:** Defines the AWS API actions covered by the statement.
+- **Resource:** Identifies the AWS resources to which the statement applies.
+- **Condition:** Adds requirements that must be satisfied for the statement to apply.
+
+#### Types of IAM Policies
+
+**1. AWS Managed Policies**
+
+Created and maintained by AWS.
+
+Example: `AmazonS3ReadOnlyAccess`.
+
+**2. Customer Managed Policies**
+
+Created and maintained by the customer. These can be reused across users, groups, and roles.
+
+**3. Inline Policies**
+
+Embedded directly in a specific user, group, or role. They are tied to that identity.
+
+**4. Resource-Based Policies**
+
+Attached to supported resources, such as an S3 bucket policy. They specify which principals can access the resource and under what conditions.
+
+**Important:** An explicit `Deny` overrides an applicable `Allow`. Permissions can also be limited by other controls, such as permissions boundaries, service control policies, and resource policies.
+
+### D. IAM Roles
+
+An IAM role is an identity with a set of permissions that a trusted principal can assume to obtain temporary security credentials.
+
+Unlike a typical IAM user, a role is not intended to have its own permanent username and password or long-term access keys.
+
+Roles are commonly used by:
+- EC2 instances.
+- Lambda functions.
+- Applications running in AWS.
+- Users accessing accounts through federation.
+- CI/CD systems that need temporary AWS access.
+
+**Example: EC2 accessing S3**
+
+Suppose an application running on EC2 needs to download a file from S3.
+
+Without a role, someone might store AWS access keys on the server, creating a security risk.
+
+With an IAM role:
+1. Create a role with the required S3 permissions.
+2. Configure EC2 as a trusted service that can assume the role.
+3. Attach the role to the EC2 instance through an instance profile.
+4. The application obtains temporary credentials automatically through the supported AWS credential provider.
+5. The application accesses S3 without storing permanent access keys on the instance.
+
+**This is a recommended approach for AWS workloads.**
+
+### E. IAM Identity Center
+
+AWS IAM Identity Center helps manage workforce access to multiple AWS accounts and supported applications from a central location.
+
+It supports centralized user access, permission sets, and integration with external identity providers.
+
+**Example:** A company can give its developers access to a development AWS account while restricting production access to authorized administrators.
+
+## 4. Authentication vs Authorization
+
+| Authentication | Authorization |
+|---|---|
+| Verifies who you are. | Determines what you can do. |
+| Uses credentials and verification methods. | Uses applicable permission policies and access controls. |
+| Example: Signing in with a password and MFA. | Example: Permission to launch an EC2 instance. |
+
+Both are essential for securing AWS resources.
+
+## 5. How IAM Works
+
+Consider a developer who needs to upload a file to S3.
+
+1. The developer authenticates using an authorized identity.
+2. The developer or workload makes an AWS API request.
+3. AWS evaluates the applicable identity policies and other access controls.
+4. If the request is permitted, AWS performs the action.
+5. If no applicable permission allows the request, or an explicit deny applies, access is denied.
+
+The exact evaluation depends on the principal, resource, account configuration, and policies involved.
+
+**Simple flow:**
+
+Identity → Authentication → Permission Evaluation → Allow or Deny → AWS Resource
+
+## 6. Principle of Least Privilege
+
+The principle of least privilege means granting only the minimum permissions required to complete a task.
+
+**Example:**
+
+A developer who only needs to view EC2 instances should not receive full administrator permissions.
+
+Instead of granting `AdministratorAccess`, use a suitable read-only policy or a custom policy restricted to the required actions.
+
+**Benefits:**
+- Reduces the risk of accidental deletion.
+- Limits damage from compromised credentials.
+- Improves security and access governance.
+- Helps enforce separation of duties.
+
+## 7. IAM and the AWS CLI
+
+The AWS CLI can be used to interact with IAM and other AWS services.
+
+### Check the current identity
+
+```bash
+aws sts get-caller-identity
+```
+
+This displays details such as the AWS account ID and the ARN of the identity used for the request.
+
+### List IAM users
+
+```bash
+aws iam list-users
+```
+
+### List IAM roles
+
+```bash
+aws iam list-roles
+```
+
+### List attached policies for a user
+
+```bash
+aws iam list-attached-user-policies --user-name developer-user
+```
+
+These commands require the caller to have the relevant permissions.
+
+## 8. IAM in DevOps
+
+IAM is essential in DevOps because automation tools need controlled access to AWS resources.
+
+### A. EC2
+
+Attach an IAM role to an EC2 instance when applications running on it need to access services such as S3 or CloudWatch.
+
+### B. AWS Lambda
+
+Assign a Lambda execution role with the permissions the function needs to access other AWS services.
+
+For example, a cleanup Lambda function may need to describe EC2 instances and delete specific orphaned EBS snapshots.
+
+### C. GitHub Actions and CI/CD
+
+GitHub Actions can authenticate to AWS using OpenID Connect (OIDC) and assume an IAM role with temporary credentials.
+
+Typical flow:
+
+GitHub Actions → OIDC Authentication → Assume IAM Role → Temporary Credentials → AWS Deployment
+
+This avoids storing long-lived AWS access keys as GitHub secrets.
+
+### D. Terraform
+
+Terraform needs AWS permissions to create, update, and delete infrastructure.
+
+For example, a Terraform deployment may use an IAM role with only the permissions needed to manage the intended resources.
+
+### E. Amazon EKS
+
+IAM is used for AWS identity and authorization integrations with EKS. Kubernetes permissions are also controlled through Kubernetes RBAC and related EKS access configuration.
+
+**Important:** AWS IAM permissions and Kubernetes RBAC permissions are separate layers. Access to the EKS API does not automatically grant unrestricted access to Kubernetes resources.
+
+## 9. IAM Security Best Practices
+
+- Enable MFA for privileged human users and protect the root user.
+- Avoid using the AWS root user for routine tasks.
+- Follow least privilege when creating policies.
+- Prefer IAM roles and temporary credentials for workloads.
+- Use OIDC federation for supported external CI/CD systems.
+- Never upload AWS access keys, passwords, or private credentials to GitHub.
+- Rotate or revoke long-term credentials when they are no longer needed.
+- Review unused users, access keys, roles, and permissions.
+- Use CloudTrail to audit AWS API activity.
+- Test policies before applying them to production workloads.
+- Use IAM Access Analyzer to help identify unintended external access and review policies.
+
+## 10. IAM vs Security Groups
+
+| IAM | Security Groups |
+|---|---|
+| Controls permissions for AWS API actions and resource access. | Controls network traffic to and from supported resources. |
+| Uses users, roles, and policies. | Uses inbound and outbound rules. |
+| Example: Allow an application to read an S3 object. | Example: Allow HTTPS traffic on port 443. |
+
+Both are important, but they solve different security problems.
+
+## 11. IAM vs Resource-Based Policies
+
+| Identity-Based Policy | Resource-Based Policy |
+|---|---|
+| Attached to a user, group, or role. | Attached to a supported resource. |
+| Defines what actions the identity can perform. | Defines which principals can access the resource and what they can do. |
+| Example: A role policy allowing `s3:GetObject`. | Example: An S3 bucket policy allowing a specific role to read objects. |
+
+Access is determined by the applicable policies and AWS authorization rules; attaching one policy does not always guarantee access.
+
+## 12. Real-World Example
+
+Suppose a company has three teams:
+
+- **Developers:** Need to deploy applications and read application logs.
+- **Administrators:** Need broader permissions to manage infrastructure.
+- **Monitoring applications:** Need permission to publish metrics or write logs.
+
+The company can create separate roles or groups with policies appropriate to each responsibility. Applications can use workload roles, while human users can access AWS through federation or IAM Identity Center.
+
+This approach reduces unnecessary permissions and helps protect production infrastructure.
+
+## 13. Conclusion
+
+AWS IAM is a fundamental security service that manages identities and permissions across AWS. Its main components include users, groups, roles, and policies.
+
+Understanding IAM is essential for securely managing EC2, S3, Lambda, EKS, Terraform, and CI/CD pipelines. By following least privilege and using temporary credentials wherever practical, we can build more secure and manageable cloud infrastructure.
