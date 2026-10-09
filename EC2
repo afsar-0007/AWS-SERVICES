@@ -1,0 +1,59 @@
+# Amazon EC2 (Elastic Compute Cloud)
+
+## What is Amazon EC2?
+
+Amazon EC2 (Elastic Compute Cloud) is an AWS service that provides resizable virtual servers in the cloud. These virtual servers are called **EC2 instances**. We can use them to host websites, run applications, deploy backend services, and perform various computing tasks without purchasing physical servers.
+
+## Key Features of EC2
+
+- **Scalability:** Increase or decrease computing resources according to application requirements.
+- **Instance Types:** Choose CPU, memory, storage, and networking capacity based on workload requirements.
+- **Amazon Machine Image (AMI):** A template used to launch an EC2 instance with an operating system and optional preconfigured software.
+- **Security Groups:** Act as virtual firewalls that control inbound and outbound traffic.
+- **Key Pairs:** Allow secure authentication when connecting to instances using SSH.
+- **Elastic IP:** Provides a static public IPv4 address that can be associated with an instance.
+- **Monitoring:** Amazon CloudWatch can monitor instance metrics such as CPU utilization and network traffic.
+
+## Types of EC2 Instances
+
+EC2 offers different instance families for different workloads:
+
+- **General Purpose:** Balanced CPU, memory, and networking resources.
+- **Compute Optimized:** Suitable for CPU-intensive applications.
+- **Memory Optimized:** Designed for workloads that require large amounts of memory.
+- **Storage Optimized:** Suitable for workloads requiring high storage performance.
+- **Accelerated Computing:** Uses hardware accelerators such as GPUs for specialized workloads.
+
+## How EC2 Works
+
+1. Select an Amazon Machine Image (AMI), such as Amazon Linux or Ubuntu.
+2. Choose an instance type based on your requirements.
+3. Configure networking and security groups.
+4. Select or create a key pair if required for SSH access.
+5. Launch the EC2 instance.
+6. Connect to the instance and install or deploy your application.
+
+## Practical Example
+
+Suppose we want to host a website on AWS. We can launch an EC2 instance with Amazon Linux, install a web server such as Nginx or Apache, and deploy our website. Users can access it through the instance's public IP address or a configured domain name, provided the network and security settings allow access.
+
+## EC2 in DevOps
+
+Amazon EC2 is widely used in DevOps for:
+
+- Hosting applications and web servers.
+- Running Jenkins for CI/CD automation.
+- Deploying Docker containers.
+- Setting up testing and staging environments.
+- Managing infrastructure using Terraform.
+- Monitoring server performance using CloudWatch.
+
+## Pricing
+
+EC2 pricing depends on the instance type, operating system, AWS Region, usage duration, and purchasing option. Common options include On-Demand, Savings Plans, Reserved Instances (where applicable), and Spot Instances.
+
+**Cost Optimization Tip:** Stop unused instances when they are not required. Remember that stopping an instance generally stops its instance compute charges, but attached EBS volumes and other resources may continue to incur charges.
+
+## Conclusion
+
+Amazon EC2 is a fundamental AWS compute service that allows users to run virtual servers on demand. It provides flexibility, scalability, and integration with other AWS services, making it an important building block for cloud computing and DevOps.
