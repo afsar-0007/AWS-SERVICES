@@ -1,0 +1,225 @@
+# Amazon EC2 (Elastic Compute Cloud)
+
+## 1. Introduction to Amazon EC2
+
+Amazon EC2 (Elastic Compute Cloud) is an Infrastructure as a Service (IaaS) provided by Amazon Web Services (AWS). It allows users to launch and manage virtual servers, known as **EC2 instances**, in the cloud without purchasing or maintaining physical hardware.
+
+An EC2 instance provides computing resources such as CPU, RAM, networking, and storage. We can install operating systems, configure software, host websites, deploy applications, and run various workloads on these instances.
+
+**Example:** If we want to host a website, we can launch an EC2 instance with Ubuntu or Amazon Linux, install Nginx or Apache, and deploy our website. Users can access it through a public IP address or a configured domain name.
+
+## 2. Important Components of EC2
+
+### A. Amazon Machine Image (AMI)
+
+An AMI is a template used to launch an EC2 instance. It contains the information required to configure the instance, including the operating system and, optionally, preinstalled software.
+
+**Uses:**
+- Launch instances with Linux or Windows.
+- Create customized server templates.
+- Launch multiple instances with similar configurations.
+
+### B. Instance Types
+
+Instance types determine the CPU, memory, networking capacity, and other computing resources available to an EC2 instance.
+
+**Main instance families:**
+
+- **General Purpose (T, M):** Suitable for web servers, development environments, and small applications.
+- **Compute Optimized (C):** Suitable for CPU-intensive workloads, batch processing, and high-performance computing.
+- **Memory Optimized (R, X):** Suitable for in-memory databases, caching, and memory-intensive applications.
+- **Storage Optimized (I, D, H):** Designed for workloads requiring high storage throughput or low-latency access to local storage.
+- **Accelerated Computing (P, G, Inf, Trn):** Uses specialized hardware such as GPUs or other accelerators for machine learning, graphics, and AI workloads.
+
+*Note: Actual instance availability and specifications depend on the AWS Region and generation.*
+
+### C. Security Groups
+
+A Security Group acts as a virtual firewall for an EC2 instance. It controls inbound and outbound network traffic through rules.
+
+**Examples:**
+- SSH — Port 22, for Linux administration.
+- HTTP — Port 80, for web traffic.
+- HTTPS — Port 443, for encrypted web traffic.
+- RDP — Port 3389, for Windows remote desktop access.
+
+**Best practice:** Allow only the required traffic. For SSH, restrict access to trusted IP addresses instead of allowing access from everywhere.
+
+### D. Key Pairs
+
+Key pairs help authenticate users connecting to EC2 instances. They consist of a public key and a private key.
+
+For example, a Linux EC2 instance can be accessed through SSH using its private key, subject to the instance's operating system, network configuration, and authentication settings.
+
+Never share or commit private keys to GitHub.
+
+### E. Amazon EBS (Elastic Block Store)
+
+EBS provides persistent block storage volumes that can be attached to EC2 instances.
+
+**Uses:**
+- Store operating system files and application data.
+- Store database files.
+- Keep data when an instance is stopped or terminated, depending on volume and deletion settings.
+
+Common EBS volume types include:
+- **gp3 / gp2:** General-purpose SSD storage.
+- **io1 / io2:** Provisioned IOPS SSD storage for demanding workloads.
+- **st1:** Throughput-oriented HDD storage.
+- **sc1:** Cold HDD storage for infrequently accessed data.
+
+### F. Elastic IP Address
+
+An Elastic IP is a static public IPv4 address that can be associated with an EC2 instance or another supported resource.
+
+**Uses:**
+- Maintain a consistent public IP address.
+- Support applications that require a fixed IP address.
+- Reassociate an address with another instance when needed.
+
+Elastic IP addresses may incur charges, including in some situations when associated with a running instance. Check current AWS pricing before using them.
+
+### G. Amazon CloudWatch
+
+CloudWatch monitors AWS resources and collects metrics, logs, and alarms.
+
+For EC2, it can monitor CPU utilization, network activity, and other available metrics. Additional configuration may be required for memory and filesystem utilization.
+
+**Uses:**
+- Monitor server performance.
+- Create alarms when CPU utilization exceeds a threshold.
+- Troubleshoot application and operating system issues using collected logs.
+
+## 3. EC2 Instance Lifecycle
+
+An EC2 instance moves through different states during its lifecycle.
+
+- **Pending:** AWS is preparing the instance.
+- **Running:** The instance is running and can execute workloads.
+- **Stopping:** AWS is stopping the instance.
+- **Stopped:** The instance is shut down but can generally be started again.
+- **Shutting-down:** The instance is being terminated.
+- **Terminated:** The instance has been permanently terminated and cannot be restarted.
+
+**Important:** Stopping an instance is different from terminating it. A stopped instance can generally be started again, while a terminated instance cannot. EBS data persistence depends on volume settings and whether the volume is deleted on termination.
+
+## 4. EC2 Purchasing Options
+
+### On-Demand Instances
+Pay for compute capacity based on usage without a long-term commitment.
+
+**Best for:** Development, testing, and unpredictable workloads.
+
+### Reserved Instances
+Commit to specified usage for a one- or three-year term to receive applicable pricing benefits. They are primarily a billing discount model, with certain types also providing capacity reservations.
+
+**Best for:** Predictable, long-running workloads.
+
+### Savings Plans
+Commit to a consistent amount of eligible compute usage per hour over a one- or three-year term in exchange for discounted rates.
+
+**Best for:** Consistent compute usage across eligible services.
+
+### Spot Instances
+Use spare AWS capacity at discounted prices, with the possibility of interruption when AWS reclaims that capacity.
+
+**Best for:** Fault-tolerant batch jobs, distributed processing, and flexible workloads.
+
+## 5. How to Launch an EC2 Instance
+
+1. Sign in to the AWS Management Console.
+2. Open the EC2 service.
+3. Select **Launch instance**.
+4. Enter an instance name.
+5. Choose an AMI, such as Amazon Linux or Ubuntu.
+6. Select an instance type.
+7. Create or select a key pair if required.
+8. Configure the VPC, subnet, and Security Group.
+9. Configure storage, such as an EBS root volume.
+10. Review the configuration and launch the instance.
+11. Connect using SSH, EC2 Instance Connect, or another supported connection method.
+
+For a public web server, ensure the instance has appropriate network connectivity and that the Security Group allows the required web traffic.
+
+## 6. Connecting to an EC2 Instance
+
+For a Linux instance, SSH can be used to establish a secure remote connection.
+
+Example:
+
+```bash
+ssh -i my-key.pem ec2-user@<public-ip>
+```
+
+The default username depends on the AMI. For example, Amazon Linux commonly uses `ec2-user`, while Ubuntu commonly uses `ubuntu`.
+
+Ensure the private key has appropriate file permissions and that SSH access is allowed from your IP address.
+
+## 7. Practical Use Cases of EC2
+
+### Hosting Websites
+Launch an instance, install Nginx or Apache, and serve a website.
+
+### Application Deployment
+Deploy Node.js, Python, Java, Go, or other applications on a cloud server.
+
+### CI/CD Automation
+Run Jenkins or self-hosted GitHub Actions runners to automate software builds and deployments.
+
+### Docker Hosting
+Install Docker and run containerized applications on an EC2 instance.
+
+### Database Hosting
+Run supported database software on EC2 when self-managed database infrastructure is required.
+
+### Development and Testing
+Create temporary environments for development, testing, and debugging.
+
+## 8. EC2 in DevOps
+
+EC2 is an important service in DevOps workflows because it provides configurable computing infrastructure.
+
+A typical workflow might look like this:
+
+**Developer → GitHub → GitHub Actions → Docker Image → EC2 → Running Application**
+
+In this workflow:
+1. The developer pushes code to GitHub.
+2. GitHub Actions runs tests and builds the application.
+3. The application is packaged into a Docker image.
+4. The deployment process deploys the application to an EC2 instance.
+5. CloudWatch monitors server metrics and application logs when configured.
+
+EC2 can also be provisioned using Terraform and configured using Ansible, making infrastructure setup repeatable and automated.
+
+## 9. EC2 Security Best Practices
+
+- Follow the principle of least privilege for IAM permissions.
+- Restrict Security Group rules to necessary ports and trusted sources.
+- Avoid exposing SSH or RDP to the entire internet.
+- Keep the operating system and installed software updated.
+- Use Systems Manager Session Manager where appropriate to reduce direct SSH exposure.
+- Store credentials and secrets securely instead of hardcoding them.
+- Encrypt EBS volumes where appropriate.
+- Monitor resources using CloudWatch and configure useful alarms.
+- Terminate unused resources to avoid unnecessary charges.
+
+## 10. EC2 Cost Optimization
+
+EC2 costs can be controlled by:
+
+- Stopping instances that are not required.
+- Choosing an appropriate instance type and avoiding over-provisioning.
+- Using Auto Scaling to match capacity with demand.
+- Considering Savings Plans or Reserved Instances for suitable steady workloads.
+- Using Spot Instances for interruption-tolerant workloads.
+- Reviewing EBS volumes, snapshots, Elastic IP addresses, and data transfer charges.
+- Monitoring usage through AWS Cost Explorer and AWS Budgets.
+
+Remember that stopping an instance does not necessarily eliminate all related costs. Persistent EBS volumes, snapshots, and other associated resources can continue to incur charges.
+
+## 11. Conclusion
+
+Amazon EC2 provides flexible and scalable virtual computing infrastructure in AWS. It supports website hosting, application deployment, container workloads, CI/CD automation, and many other cloud computing tasks.
+
+Understanding AMIs, instance types, Security Groups, key pairs, EBS, instance lifecycle, monitoring, and pricing is essential for working effectively with EC2 in cloud computing and DevOps.
