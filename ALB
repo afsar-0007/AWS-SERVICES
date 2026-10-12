@@ -1,0 +1,330 @@
+# AWS Application Load Balancer (ALB)
+
+## 1. What is an Application Load Balancer?
+
+An **Application Load Balancer (ALB)** is a load-balancing service provided by AWS Elastic Load Balancing (ELB). It distributes incoming HTTP and HTTPS traffic across multiple targets, such as EC2 instances, containers, and IP addresses.
+
+ALB operates at **Layer 7 (Application Layer)** of the OSI model. It can inspect HTTP requests and route traffic based on rules such as URL paths, hostnames, HTTP headers, query strings, and HTTP methods.
+
+**Example:** Suppose you have an e-commerce application with separate services for products, payments, and users. ALB can route requests to the appropriate service based on the requested URL.
+
+- `/products` → Product service
+- `/payments` → Payment service
+- `/users` → User service
+
+## 2. Why Do We Need an ALB?
+
+Without a load balancer, users might access a single server directly. If that server becomes overloaded or unavailable, the application may become slow or inaccessible.
+
+ALB helps solve these problems by:
+
+- **Load distribution:** Distributes incoming traffic across multiple targets.
+- **High availability:** Supports targets across multiple Availability Zones.
+- **Health checks:** Detects unhealthy targets and stops routing new requests to them.
+- **Path-based routing:** Routes traffic based on URL paths.
+- **Host-based routing:** Routes traffic based on domain names.
+- **HTTPS support:** Supports TLS termination using SSL/TLS certificates.
+- **Scalability:** Works with Auto Scaling and dynamically registered targets.
+- **Security:** Integrates with AWS WAF and security groups.
+
+## 3. How Does an ALB Work?
+
+The request flow is:
+
+```text
+              Users / Clients
+                     |
+                     v
+              Route 53 (DNS)
+                     |
+                     v
+       Application Load Balancer
+              (HTTP / HTTPS)
+                     |
+             Listener Rules
+                     |
+          +----------+----------+
+          |                     |
+          v                     v
+   Target Group A        Target Group B
+   (Product Service)     (Payment Service)
+          |                     |
+      +---+---+             +---+---+
+      |       |             |       |
+     EC2     EC2           EC2     EC2
+```
+
+### Working Process
+
+1. A user sends an HTTP or HTTPS request to the application.
+2. DNS resolves the application's domain name to the ALB.
+3. The ALB listener receives the request on a configured port, commonly 80 or 443.
+4. Listener rules evaluate the request conditions.
+5. The ALB forwards the request to the appropriate target group.
+6. The target group distributes requests among healthy registered targets.
+7. The selected target processes the request and returns a response.
+
+## 4. Important Components of ALB
+
+### A. Load Balancer
+
+The load balancer receives client connections and distributes requests to registered targets.
+
+When creating an ALB, you configure its name, scheme, IP address type, VPC, Availability Zones, subnets, and security groups.
+
+**Types of ALB schemes:**
+
+- **Internet-facing:** Accepts requests from clients over the internet, subject to network and security configuration.
+- **Internal:** Used for private applications accessible through connected private networks.
+
+### B. Listener
+
+A listener checks for incoming connection requests on a configured protocol and port.
+
+Common configurations:
+
+- HTTP — Port 80
+- HTTPS — Port 443
+
+A listener contains a default action and can contain additional rules that determine how requests are handled.
+
+For HTTPS, you configure a TLS certificate, commonly managed through AWS Certificate Manager (ACM).
+
+### C. Listener Rules
+
+Listener rules define how traffic is routed based on request conditions.
+
+Common routing conditions include:
+
+- **Path-based routing:** `/api/*`, `/images/*`
+- **Host-based routing:** `api.example.com`, `shop.example.com`
+- **HTTP header routing:** Routes based on specified header values.
+- **Query-string routing:** Routes based on query parameters.
+- **HTTP method routing:** Routes based on methods such as GET or POST.
+- **Source IP routing:** Routes based on the client's source IP address.
+
+Rules have priorities, and the default rule is evaluated when no other rule matches.
+
+### D. Target Groups
+
+A target group contains the registered destinations to which the ALB forwards requests.
+
+Supported target types include:
+
+- **Instance:** Routes traffic to EC2 instances.
+- **IP:** Routes traffic to private IP addresses.
+- **Lambda:** Routes requests to a Lambda function.
+
+Each target group has its own protocol, port, health checks, and registered targets.
+
+### E. Health Checks
+
+Health checks verify whether registered targets can receive traffic.
+
+For example, an ALB can periodically send an HTTP request to `/health` on an application server.
+
+- Healthy targets can receive requests.
+- Unhealthy targets are generally excluded from normal routing.
+- When a target becomes healthy again, it can return to service.
+
+Health-check settings include the protocol, path, interval, timeout, healthy threshold, and unhealthy threshold.
+
+## 5. Types of Routing in ALB
+
+### Path-Based Routing
+
+Routes requests based on the URL path.
+
+Example:
+
+| Request path | Target group |
+|---|---|
+| `/products` | Product service |
+| `/api/*` | API service |
+| `/images/*` | Image service |
+
+### Host-Based Routing
+
+Routes requests based on the hostname.
+
+Example:
+
+| Hostname | Target group |
+|---|---|
+| `shop.example.com` | Shopping application |
+| `api.example.com` | Backend API |
+| `admin.example.com` | Admin application |
+
+### Default Routing
+
+If no listener rule matches, the ALB executes the listener's default action, such as forwarding to a default target group or returning a fixed response.
+
+## 6. ALB vs. NLB vs. Classic Load Balancer
+
+| Feature | ALB | NLB | Classic Load Balancer |
+|---|---|---|---|
+| OSI layer | Layer 7 | Layer 4 | Layer 4 and Layer 7 capabilities |
+| Main protocols | HTTP, HTTPS | TCP, UDP, TLS | TCP, SSL/TLS, HTTP, HTTPS |
+| Routing | Content-based routing | Connection-level routing | Basic load balancing |
+| Main use case | Web applications and APIs | Low-latency and non-HTTP workloads | Legacy applications |
+| Advanced HTTP routing | Yes | No | Limited |
+| Static IP addresses | Not provided per ALB node | Supported | Not a primary feature |
+
+**Remember:**
+- ALB is generally suitable for web applications and REST APIs.
+- NLB is suitable for TCP/UDP workloads and use cases requiring static IP addresses.
+- Classic Load Balancer is an older generation; AWS generally recommends newer load balancers for new applications.
+
+## 7. ALB and Auto Scaling
+
+ALB can work with an EC2 Auto Scaling group to maintain application availability as demand changes.
+
+For example:
+
+1. The ALB receives user requests.
+2. An Auto Scaling group launches additional EC2 instances when required.
+3. New instances are registered with the target group.
+4. Once their health checks pass, they can receive traffic.
+5. When instances are removed, they are deregistered from the target group.
+
+This combination helps an application handle changing traffic levels.
+
+## 8. Security of an ALB
+
+Important security practices include:
+
+- Configure security groups to allow only required inbound traffic.
+- Allow HTTP or HTTPS traffic from intended client networks.
+- Permit traffic from the ALB security group to the targets on the application port.
+- Use HTTPS listeners with valid TLS certificates.
+- Store sensitive application data securely.
+- Use AWS WAF when web application filtering is required.
+- Prefer private subnets for backend instances when public access is unnecessary.
+
+An internet-facing ALB does not automatically make every backend instance public. Backend reachability depends on subnet routing, security groups, and other network controls.
+
+## 9. Practical Example: Hosting a Web Application
+
+Suppose an application runs on two EC2 instances:
+
+- EC2-1: `10.0.1.10`
+- EC2-2: `10.0.2.10`
+
+Both instances run the same web application.
+
+You create:
+
+1. An internet-facing Application Load Balancer.
+2. A listener on port 80 or an HTTPS listener on port 443.
+3. A target group containing both EC2 instances.
+4. Health checks using the application's health endpoint.
+5. Security-group rules that allow client traffic to the ALB and ALB traffic to the instances.
+
+Users access the application through the ALB's DNS name. The ALB distributes requests to healthy targets, improving availability and preventing all requests from depending on a single server.
+
+## 10. How to Create an ALB in AWS Console
+
+1. Open the **EC2 Console**.
+2. Navigate to **Load Balancing → Load Balancers**.
+3. Select **Create load balancer**.
+4. Choose **Application Load Balancer**.
+5. Enter a load balancer name.
+6. Choose Internet-facing or Internal.
+7. Select the VPC and at least two Availability Zones with appropriate subnets.
+8. Configure the ALB security group.
+9. Create or select a target group.
+10. Register EC2 instances or other supported targets.
+11. Configure target health checks.
+12. Add an HTTP or HTTPS listener and configure its default action.
+13. Create the load balancer and wait for it to become active.
+14. Verify target health and access the application using the ALB DNS name.
+
+For production, configure HTTPS, appropriate access controls, monitoring, and a suitable health-check endpoint.
+
+## 11. Monitoring an ALB
+
+AWS CloudWatch provides metrics for monitoring ALB performance and health.
+
+Important metrics include:
+
+- `RequestCount` — Number of requests handled.
+- `TargetResponseTime` — Time taken for targets to respond.
+- `HTTPCode_ELB_5XX_Count` — Number of load-balancer-generated 5XX responses.
+- `HTTPCode_Target_5XX_Count` — Number of target-generated 5XX responses.
+- `HealthyHostCount` — Number of healthy targets.
+- `UnHealthyHostCount` — Number of unhealthy targets.
+- `RejectedConnectionCount` — Connections rejected by the load balancer.
+
+Access logs can also be enabled to record detailed request information in Amazon S3.
+
+## 12. Advantages of ALB
+
+1. Distributes traffic across multiple targets.
+2. Supports path-based and host-based routing.
+3. Performs health checks on registered targets.
+4. Supports HTTP and HTTPS applications.
+5. Integrates with Auto Scaling, CloudWatch, ACM, and AWS WAF.
+6. Supports microservices and container-based applications.
+7. Helps improve application availability across Availability Zones.
+
+## 13. Limitations and Cost Considerations
+
+- ALB is designed primarily for HTTP and HTTPS workloads, not general TCP/UDP load balancing.
+- Incorrect listener rules, security groups, or health checks can prevent traffic from reaching applications.
+- ALB incurs charges based on factors including load balancer usage time and Load Balancer Capacity Units (LCUs); applicable data-transfer charges may also apply.
+- An ALB alone does not guarantee high availability if the backend application or its dependencies are unavailable.
+
+For cost management, remove unused load balancers and monitor traffic and LCU consumption.
+
+## 14. Important Interview Questions
+
+**Q1. What is an Application Load Balancer?**
+
+An ALB is an AWS Layer 7 load balancer that distributes HTTP/HTTPS requests across targets and supports content-based routing.
+
+**Q2. What is the difference between a listener and a target group?**
+
+A listener accepts incoming connections and evaluates rules. A target group defines the destinations that receive forwarded requests.
+
+**Q3. What happens when a target becomes unhealthy?**
+
+The ALB generally stops routing normal requests to that target until it passes health checks again.
+
+**Q4. Can an ALB route traffic based on URL paths?**
+
+Yes. For example, `/api/*` can be forwarded to an API target group.
+
+**Q5. Can an ALB distribute traffic across multiple Availability Zones?**
+
+Yes. It can route traffic to healthy targets in enabled Availability Zones, provided the configuration and target availability support this.
+
+**Q6. What is the difference between an internet-facing ALB and an internal ALB?**
+
+An internet-facing ALB is designed to receive traffic from the internet. An internal ALB is intended for private network traffic.
+
+**Q7. Can an ALB work with Kubernetes?**
+
+Yes. On Amazon EKS, the AWS Load Balancer Controller can provision and manage ALBs for Kubernetes Ingress resources.
+
+**Q8. Does an ALB replace Auto Scaling?**
+
+No. ALB distributes traffic, while Auto Scaling adjusts the number of compute instances based on configured scaling policies.
+
+**Q9. Can an ALB route traffic to Lambda?**
+
+Yes. A Lambda function can be registered as a target through a Lambda target group.
+
+**Q10. How does an ALB support HTTPS?**
+
+An HTTPS listener uses a TLS certificate to establish encrypted connections with clients. The ALB can terminate TLS and forward requests to targets according to its configuration.
+
+## 15. Key Takeaways
+
+- ALB operates at Layer 7 of the OSI model.
+- It is designed for HTTP and HTTPS traffic.
+- Listeners receive traffic, listener rules determine routing, and target groups identify destinations.
+- Health checks help prevent normal traffic from being sent to unhealthy targets.
+- ALB integrates with Auto Scaling and CloudWatch.
+- On EKS, ALB can provide external HTTP/HTTPS access to Kubernetes applications through Ingress.
+
+**Official AWS Documentation:** https://docs.aws.amazon.com/elasticloadbalancing/latest/application/introduction.html
