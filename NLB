@@ -1,0 +1,218 @@
+# AWS Network Load Balancer (NLB)
+
+## 1. What is a Network Load Balancer?
+
+AWS Network Load Balancer (NLB) is a Layer 4 load balancer provided by Amazon Web Services. It distributes incoming network traffic across multiple targets, such as EC2 instances, IP addresses, and Application Load Balancers.
+
+NLB operates at the Transport Layer (Layer 4) of the OSI model and supports protocols such as TCP, UDP, and TLS. It is designed for high performance, low latency, and handling millions of requests per second.
+
+**Example:** If an application runs on three EC2 instances, NLB distributes incoming connections among healthy instances instead of sending all traffic to a single server.
+
+## 2. How Does NLB Work?
+
+The working process of NLB is as follows:
+
+1. A client sends a request to the NLB DNS name or IP address.
+2. The NLB receives the request through a configured listener.
+3. The listener accepts traffic on a specific protocol and port.
+4. The NLB selects a healthy target from the target group.
+5. The traffic is forwarded to the selected target.
+6. Health checks monitor the availability of registered targets.
+
+NLB can distribute traffic across multiple Availability Zones to improve application availability and fault tolerance.
+
+## 3. Components of NLB
+
+### A. Load Balancer
+The load balancer acts as the entry point for incoming traffic and distributes connections across registered targets.
+
+Types:
+- **Internet-facing NLB:** Accepts traffic from the internet.
+- **Internal NLB:** Accepts traffic from private networks within a VPC or connected networks.
+
+### B. Listener
+A listener checks for incoming connection requests on a specified protocol and port.
+
+Examples:
+- TCP port 80
+- TCP port 443
+- TLS port 443
+- UDP port 53
+
+### C. Target Group
+A target group contains the backend resources that receive traffic from the load balancer.
+
+Target types include:
+- **Instance:** Routes traffic to EC2 instances.
+- **IP:** Routes traffic to specific IP addresses.
+- **Application Load Balancer:** Routes traffic to an ALB configured as a target.
+
+### D. Health Checks
+Health checks monitor whether registered targets are available to receive traffic.
+
+If a target becomes unhealthy, NLB generally stops routing normal traffic to it until it becomes healthy again, subject to AWS health and fail-open behavior.
+
+## 4. Important Features of NLB
+
+1. **Layer 4 Load Balancing:** Distributes traffic based on network connections, protocols, and ports.
+2. **High Performance:** Designed for high throughput and low latency.
+3. **Static IP Addresses:** Provides a static IP address per enabled Availability Zone.
+4. **Elastic IP Support:** Allows Elastic IP addresses to be associated with enabled zones of an internet-facing NLB.
+5. **High Availability:** Supports multiple Availability Zones.
+6. **Client IP Preservation:** Can preserve the original client IP for supported configurations.
+7. **TLS Termination:** Can handle TLS encryption and decryption using a TLS listener.
+8. **Health Checks:** Monitors backend target availability.
+9. **CloudWatch Monitoring:** Supports monitoring through Amazon CloudWatch metrics.
+
+## 5. NLB Architecture Example
+
+Consider an application running on three EC2 instances.
+
+Traffic flow:
+
+Client → Network Load Balancer → Listener → Target Group → EC2 Instances
+
+Example:
+
+- Client sends a request to the NLB.
+- NLB receives the request on TCP port 80.
+- The listener forwards traffic to the target group.
+- The target group contains three EC2 instances.
+- NLB routes traffic to healthy targets.
+
+This architecture improves scalability, availability, and traffic distribution.
+
+## 6. NLB vs ALB vs Classic Load Balancer
+
+| Feature | NLB | ALB | Classic LB |
+|---|---|---|---|
+| OSI Layer | Layer 4 | Layer 7 | Layer 4 and Layer 7 |
+| Main Purpose | Network traffic | Web applications | Legacy applications |
+| Routing | Connection and transport-level | Host, path, and HTTP rules | Basic routing |
+| Protocols | TCP, UDP, TLS, and supported combinations | HTTP, HTTPS, WebSockets, gRPC | HTTP, HTTPS, TCP, TLS |
+| Static IP per AZ | Yes | Not by default | Not by default |
+| Best Use Case | High-performance network traffic | Websites and APIs | Existing legacy systems |
+
+**Remember:**
+- NLB = Layer 4 = Network traffic.
+- ALB = Layer 7 = Application traffic.
+- Classic Load Balancer = Older-generation load balancer.
+
+## 7. Real-World Use Cases
+
+- **Gaming Applications:** Distributes TCP or UDP traffic among game servers.
+- **Financial Applications:** Supports high-volume, low-latency network connections.
+- **Microservices:** Provides an entry point for TCP-based services.
+- **Private Applications:** Exposes internal services through a private network endpoint.
+- **IP Allowlisting:** Provides stable IP addresses for external systems.
+- **Amazon EKS:** Exposes Kubernetes services through an NLB when configured with a compatible controller.
+
+## 8. NLB with Amazon EKS
+
+In Amazon EKS, a Kubernetes Service of type `LoadBalancer` can provision an AWS load balancer, depending on the controller and configuration.
+
+Example Kubernetes Service:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: voting-api
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+spec:
+  type: LoadBalancer
+  selector:
+    app: voting-api
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+```
+
+This is an illustrative example for an EKS cluster configured with the AWS Load Balancer Controller.
+
+Traffic flow:
+
+User → NLB → Kubernetes Service targets → Application Pods
+
+With IP targets, traffic can be routed directly to Pod IP addresses. With instance targets, traffic typically passes through worker nodes and a NodePort.
+
+## 9. Advantages of NLB
+
+- Handles high volumes of network connections.
+- Provides low latency and high throughput.
+- Supports TCP and UDP applications.
+- Provides static IP addresses.
+- Supports multiple Availability Zones.
+- Performs health checks on registered targets.
+- Integrates with Amazon CloudWatch.
+- Supports internet-facing and internal load balancing.
+
+## 10. Limitations of NLB
+
+- Does not provide ALB-style HTTP path-based routing.
+- Advanced features depend on the selected protocol and target configuration.
+- Incorrect security group or health check settings can prevent traffic from reaching targets.
+- Load balancer usage and processed traffic can incur AWS charges.
+
+## 11. Best Practices
+
+1. Enable multiple Availability Zones when appropriate.
+2. Register healthy targets across enabled zones.
+3. Configure suitable health checks.
+4. Allow required application and health check traffic through security groups and network rules.
+5. Use an internal NLB for private services.
+6. Monitor target health and CloudWatch metrics.
+7. Review AWS pricing before deploying production resources.
+
+## 12. Interview Questions
+
+**Q1. What is AWS Network Load Balancer?**
+
+NLB is a Layer 4 load balancer that distributes network connections across registered targets while providing high throughput and low latency.
+
+**Q2. What is the difference between NLB and ALB?**
+
+NLB operates at Layer 4 and handles network connections, whereas ALB operates at Layer 7 and supports HTTP/HTTPS application-level routing.
+
+**Q3. What is a target group?**
+
+A target group is a collection of registered backend resources that receive traffic from a load balancer and have an associated health check configuration.
+
+**Q4. Why does NLB use static IP addresses?**
+
+Static IP addresses provide stable network endpoints for clients, partner integrations, and IP allowlisting.
+
+**Q5. What happens when a target becomes unhealthy?**
+
+NLB generally stops routing normal traffic to an unhealthy target, depending on the health status and fail-open behavior.
+
+**Q6. Can NLB be used with Amazon EKS?**
+
+Yes. NLB can expose Kubernetes applications through an AWS load balancer and route traffic to worker nodes or Pod IPs, depending on the target configuration.
+
+## 13. NLB vs ALB: When to Use Which?
+
+Use **NLB** when an application requires:
+- TCP or UDP traffic distribution.
+- High throughput and low latency.
+- Static IP addresses.
+- Network-level load balancing.
+
+Use **ALB** when an application requires:
+- HTTP/HTTPS routing.
+- Path-based routing, such as `/api` and `/admin`.
+- Host-based routing, such as `api.example.com` and `app.example.com`.
+- Application-level routing rules.
+
+## 14. Official AWS Documentation
+
+- NLB Overview: https://docs.aws.amazon.com/elasticloadbalancing/latest/network/network-load-balancers.html
+- NLB Listeners: https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-listeners.html
+- NLB Target Groups: https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-target-groups.html
+- NLB Health Checks: https://docs.aws.amazon.com/elasticloadbalancing/latest/network/target-group-health-checks.html
+
+**Key Takeaway:** AWS Network Load Balancer is best suited for high-performance Layer 4 traffic distribution, TCP/UDP workloads, low-latency connections, and applications requiring stable IP addresses. For intelligent HTTP/HTTPS routing, Application Load Balancer is generally the better choice.
+
+**Suggested GitHub filename:** `AWS-Network-Load-Balancer.md`
