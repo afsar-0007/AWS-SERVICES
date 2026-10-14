@@ -333,6 +333,3 @@ For example, an EC2 instance can have the name `Web-Server-01` and additional ta
 - Terraform can apply tags consistently during infrastructure provisioning.
 - A well-designed tagging strategy is an important part of AWS governance and DevOps.
 
-**Interview Question:** Why are AWS Tags important for a DevOps Engineer?
-
-**Answer:** AWS Tags help DevOps engineers organize cloud resources, identify ownership, track costs, distinguish environments, automate resource management, and implement tag-based access control. When combined with Terraform, AWS Lambda, EventBridge, and IAM policies, tags help build consistent and controlled cloud management workflows.
