@@ -310,13 +310,7 @@ Yes. On Amazon EKS, the AWS Load Balancer Controller can provision and manage AL
 
 No. ALB distributes traffic, while Auto Scaling adjusts the number of compute instances based on configured scaling policies.
 
-**Q9. Can an ALB route traffic to Lambda?**
 
-Yes. A Lambda function can be registered as a target through a Lambda target group.
-
-**Q10. How does an ALB support HTTPS?**
-
-An HTTPS listener uses a TLS certificate to establish encrypted connections with clients. The ALB can terminate TLS and forward requests to targets according to its configuration.
 
 ## 15. Key Takeaways
 
