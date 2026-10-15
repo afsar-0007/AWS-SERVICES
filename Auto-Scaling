@@ -1,0 +1,241 @@
+# AWS Auto Scaling – Complete Notes
+
+## 1. What is AWS Auto Scaling?
+
+AWS Auto Scaling automatically adjusts the number of resources running in an application according to workload demand.
+
+**EC2 Auto Scaling** is used to automatically launch, maintain, and terminate EC2 instances based on configured capacity requirements, health checks, and scaling policies.
+
+### Why Do We Use Auto Scaling?
+- **High Availability:** Maintains the required number of EC2 instances.
+- **Scalability:** Handles increasing or decreasing traffic.
+- **Cost Optimization:** Removes unnecessary instances when demand decreases.
+- **Fault Tolerance:** Replaces unhealthy EC2 instances.
+- **Automation:** Reduces manual infrastructure management.
+
+## 2. Important Components
+
+### A. Launch Template
+A Launch Template defines the configuration used to launch EC2 instances.
+
+It includes:
+- AMI ID
+- Instance type
+- Key pair
+- Security groups
+- Storage configuration
+- IAM instance profile
+- User Data script
+
+### B. Auto Scaling Group (ASG)
+An Auto Scaling Group manages a group of EC2 instances.
+
+It has three important capacity settings:
+
+- **Minimum Capacity:** Minimum number of instances to maintain.
+- **Desired Capacity:** Target number of instances.
+- **Maximum Capacity:** Maximum number of instances allowed.
+
+Example:
+
+```text
+Minimum Capacity = 2
+Desired Capacity = 2
+Maximum Capacity = 5
+```
+
+The ASG initially maintains two instances and can increase capacity to five when required.
+
+### C. Scaling Policies
+Scaling policies determine when and how the ASG changes its capacity.
+
+**1. Target Tracking Scaling**
+Maintains a metric near a specified target.
+
+Example: Maintain average CPU utilization around 50%.
+
+**2. Step Scaling**
+Changes capacity according to CloudWatch alarm thresholds and the severity of a metric breach.
+
+Example:
+- CPU above 70%: Add two instances.
+- CPU above 90%: Add three instances.
+
+**3. Simple Scaling**
+Uses CloudWatch alarms to trigger scaling adjustments, generally with a cooldown period.
+
+**4. Scheduled Scaling**
+Changes capacity according to a predefined schedule.
+
+Example: Increase capacity during business hours.
+
+**5. Predictive Scaling**
+Uses historical usage patterns to forecast future demand and schedule capacity in advance.
+
+## 3. Scale Out vs. Scale In
+
+| Scale Out | Scale In |
+|---|---|
+| Increases EC2 instances | Decreases EC2 instances |
+| Used when demand increases | Used when demand decreases |
+| Adds computing capacity | Removes excess capacity |
+| Helps handle high traffic | Helps optimize costs |
+
+## 4. How AWS Auto Scaling Works
+
+1. Create a Launch Template.
+2. Create an Auto Scaling Group.
+3. Select the VPC and subnets.
+4. Configure minimum, desired, and maximum capacity.
+5. Attach a scaling policy.
+6. Monitor metrics through CloudWatch.
+7. Launch additional instances or terminate excess instances when scaling conditions are met.
+8. Replace unhealthy instances when detected by the configured health checks.
+
+## 5. AWS Auto Scaling Architecture
+
+```text
+                   Internet Users
+                         |
+                         v
+                Application Load Balancer
+                         |
+                    Target Group
+                         |
+              +----------+----------+
+              |          |          |
+              v          v          v
+            EC2-1      EC2-2      EC2-3
+              |          |          |
+              +----------+----------+
+                         |
+                  Auto Scaling Group
+                         |
+                   Launch Template
+                         |
+                  Amazon Machine Image
+
+       Amazon CloudWatch --> Scaling Policy
+                                  |
+                                  v
+                       Adjust ASG Capacity
+```
+
+### Role of Each Component
+
+- **ALB:** Distributes incoming HTTP/HTTPS requests across healthy registered targets.
+- **Target Group:** Registers the EC2 instances that receive traffic.
+- **ASG:** Manages EC2 instance capacity and replacement.
+- **Launch Template:** Defines the configuration of newly launched instances.
+- **CloudWatch:** Provides monitoring metrics and alarms used by scaling policies.
+- **Scaling Policy:** Determines how the group responds to changes in demand.
+
+For high availability, deploy instances across multiple Availability Zones.
+
+## 6. Relationship Between ALB and ASG
+
+An Application Load Balancer and an Auto Scaling Group perform different tasks.
+
+- The ALB distributes incoming traffic.
+- The ASG manages the number of EC2 instances.
+- The ASG can automatically register new instances with an associated target group.
+- The ALB routes traffic to healthy registered targets.
+- When instances are terminated, they are deregistered from the target group.
+
+**Example:** When traffic increases, the ASG launches additional EC2 instances. After registration and successful health checks, the ALB can route requests to those instances.
+
+## 7. Metrics Used for Scaling
+
+Common metrics include:
+
+- CPU utilization
+- Network traffic
+- ALB requests per target
+- Custom CloudWatch metrics
+- Other supported application or resource utilization metrics
+
+Choose a metric that accurately represents your application's workload.
+
+## 8. What Happens When an EC2 Instance Fails?
+
+Suppose an ASG has a desired capacity of three instances.
+
+1. One EC2 instance becomes unhealthy.
+2. The configured health checks detect the problem.
+3. The ASG replaces the unhealthy instance when appropriate.
+4. A new instance launches using the Launch Template.
+5. The replacement initializes and becomes healthy.
+6. The ASG returns to its desired capacity.
+
+This reduces the need for manual recovery.
+
+## 9. Important Auto Scaling Features
+
+- **Health Checks:** Detect unhealthy instances.
+- **Health Check Grace Period:** Allows newly launched instances time to initialize.
+- **Instance Refresh:** Gradually replaces instances when updating their configuration.
+- **Lifecycle Hooks:** Allow custom actions during instance launch or termination.
+- **Termination Policies:** Influence which instances are terminated during scale-in.
+- **Instance Warmup:** Helps scaling policies account for newly launched instances that are not yet fully initialized.
+
+## 10. Benefits of Auto Scaling
+
+- Automatic capacity adjustment
+- Improved application availability
+- Better workload handling
+- Reduced manual effort
+- Cost optimization
+- Integration with CloudWatch and Elastic Load Balancing
+- Support for multi-AZ deployments
+
+## 11. Best Practices
+
+- Deploy production instances across multiple Availability Zones.
+- Configure appropriate minimum and maximum capacity.
+- Select meaningful scaling metrics.
+- Configure health checks and instance warmup correctly.
+- Monitor scaling activities using CloudWatch.
+- Ensure sufficient EC2 quotas and subnet IP addresses.
+- Design applications to support horizontal scaling.
+- Use lifecycle hooks when applications need time to finish processing before termination.
+
+## 12. Real-World Example
+
+Consider an e-commerce website running on AWS.
+
+**Normal traffic:**
+The ASG maintains two EC2 instances, and the ALB distributes customer requests between healthy targets.
+
+**During a major sale:**
+Traffic increases, and CPU utilization rises. A target tracking policy determines that more capacity is needed. The ASG launches additional EC2 instances, which become available to the ALB after registration and health checks.
+
+**After the sale:**
+Traffic decreases, so the ASG can terminate excess instances while respecting its configured capacity limits.
+
+This approach improves availability and helps avoid paying for unnecessary EC2 capacity.
+
+## 13. Auto Scaling vs. Load Balancer
+
+| Feature | Auto Scaling Group | Load Balancer |
+|---|---|---|
+| Primary purpose | Manages compute capacity | Distributes traffic |
+| Adds EC2 instances | Yes | No |
+| Removes excess instances | Yes | No |
+| Performs traffic routing | No | Yes |
+| Supports health-related operations | Yes | Yes, through target health checks |
+| Common integration | Launch Template | Target Group |
+
+## 14. Key Takeaways
+
+- **Launch Template:** Defines how EC2 instances are launched.
+- **Auto Scaling Group:** Manages EC2 capacity and instance replacement.
+- **Scaling Policy:** Determines how capacity changes.
+- **CloudWatch:** Supplies metrics and alarms.
+- **ALB:** Distributes incoming traffic.
+- **Scale Out:** Adds instances.
+- **Scale In:** Removes instances.
+- **Multi-AZ:** Improves availability across Availability Zones.
+
+### Conclusion
+
+AWS Auto Scaling is an essential service for DevOps engineers. It helps automate infrastructure capacity management, improve application availability, respond to changing workloads, and optimize cloud costs.
