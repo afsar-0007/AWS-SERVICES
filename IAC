@@ -1,0 +1,246 @@
+# AWS CloudFormation — Infrastructure as Code (IaC)
+
+## 1. What is AWS CloudFormation?
+
+AWS CloudFormation is an Infrastructure as Code (IaC) service provided by AWS that allows us to create, manage, update, and delete AWS resources using templates written in YAML or JSON.
+
+Instead of manually creating resources through the AWS Management Console, we define the required infrastructure in a template called a **CloudFormation Template (CFT)**. CloudFormation reads this template and provisions the resources automatically.
+
+**Example:** Instead of manually creating a VPC, subnet, EC2 instance, and security group, we can define all these resources in a YAML file and deploy them together using CloudFormation.
+
+## 2. Why Do We Use CloudFormation?
+
+- **Infrastructure as Code:** Define infrastructure using YAML or JSON.
+- **Automation:** Automatically provision AWS resources.
+- **Repeatability:** Deploy the same infrastructure across development, testing, and production.
+- **Version Control:** Store templates in Git and track changes.
+- **Dependency Management:** CloudFormation manages resource creation order based on dependencies.
+- **Stack Management:** Manage related resources as a single unit called a stack.
+- **Updates and Rollbacks:** Update infrastructure through template changes and roll back certain failed operations.
+- **Consistency:** Reduce manual configuration errors.
+
+## 3. Important CloudFormation Components
+
+### A. Template
+A YAML or JSON file that describes the AWS infrastructure to be created.
+
+Example: `main.yaml`
+
+### B. Stack
+A collection of AWS resources created and managed together through a CloudFormation template.
+
+Example: One stack may contain a VPC, subnet, security group, and EC2 instance.
+
+### C. Resources
+The AWS resources that CloudFormation creates.
+
+Examples:
+- `AWS::EC2::Instance`
+- `AWS::EC2::VPC`
+- `AWS::EC2::Subnet`
+- `AWS::S3::Bucket`
+- `AWS::IAM::Role`
+
+### D. Parameters
+Allow users to provide values when creating a stack.
+
+Example: Selecting an EC2 instance type such as `t3.micro`.
+
+### E. Outputs
+Display useful information after stack creation.
+
+Example: The ID of the created EC2 instance.
+
+### F. Mappings
+Define static lookup values that can be selected based on keys.
+
+### G. Conditions
+Control whether particular resources or properties are created based on specified conditions.
+
+### H. Change Sets
+Preview the proposed changes to a stack before applying them.
+
+## 4. How AWS CloudFormation Works
+
+1. Write a CloudFormation template in YAML or JSON.
+2. Upload or provide the template to CloudFormation.
+3. Create a stack from the template.
+4. CloudFormation analyzes the template and provisions the specified resources.
+5. Monitor stack events and resource status.
+6. Update the template when infrastructure requirements change.
+7. Delete the stack when the infrastructure is no longer required, subject to deletion policies and dependencies.
+
+**Workflow:**
+
+Developer → YAML/JSON Template → CloudFormation Stack → AWS Resources
+
+## 5. Practical Example: Create an EC2 Instance Using CloudFormation
+
+The following template creates:
+- One EC2 instance.
+- One security group.
+- HTTP access on port 80.
+- A simple Nginx web server using EC2 User Data.
+- An output containing the EC2 instance ID.
+
+Save this file as `ec2-stack.yaml`.
+
+```yaml
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create an EC2 web server using AWS CloudFormation
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t3.micro
+    Description: EC2 instance type
+
+Resources:
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow HTTP access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: ami-REPLACE_WITH_VALID_AMI_ID
+      SecurityGroupIds:
+        - !GetAtt WebSecurityGroup.GroupId
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          dnf install -y nginx
+          systemctl enable --now nginx
+      Tags:
+        - Key: Name
+          Value: CloudFormation-WebServer
+
+Outputs:
+  InstanceId:
+    Description: ID of the created EC2 instance
+    Value: !Ref WebServer
+```
+
+**Important:** Replace `ami-REPLACE_WITH_VALID_AMI_ID` with a valid AMI ID for your chosen AWS Region. This example assumes a compatible Amazon Linux AMI that supports `dnf`. The AMI must be compatible with the instance type.
+
+This template does not create a VPC or Internet Gateway. It uses the default VPC if one exists and allows inbound HTTP traffic in the security group. For public website access, the instance also needs suitable public networking and routing. Restrict the HTTP source CIDR when appropriate for your environment.
+
+## 6. Deploy the Template Using AWS CLI
+
+First, configure AWS CLI credentials and select the intended Region.
+
+Check your identity:
+
+```bash
+aws sts get-caller-identity
+```
+
+Validate the template:
+
+```bash
+aws cloudformation validate-template \
+  --template-body file://ec2-stack.yaml
+```
+
+Create the stack:
+
+```bash
+aws cloudformation create-stack \
+  --stack-name my-web-stack \
+  --template-body file://ec2-stack.yaml \
+  --capabilities CAPABILITY_IAM
+```
+
+For this particular template, `CAPABILITY_IAM` is not required because it does not create IAM resources.
+
+Wait for creation to complete:
+
+```bash
+aws cloudformation wait stack-create-complete \
+  --stack-name my-web-stack
+```
+
+Check the stack:
+
+```bash
+aws cloudformation describe-stacks \
+  --stack-name my-web-stack
+```
+
+View stack events:
+
+```bash
+aws cloudformation describe-stack-events \
+  --stack-name my-web-stack
+```
+
+## 7. Update and Delete a Stack
+
+After modifying the template, validate the changes and review a change set before applying them.
+
+To update a stack directly:
+
+```bash
+aws cloudformation update-stack \
+  --stack-name my-web-stack \
+  --template-body file://ec2-stack.yaml
+```
+
+This command requires an actual infrastructure change; otherwise, CloudFormation may report that no updates are to be performed.
+
+To delete the stack when it is no longer needed:
+
+```bash
+aws cloudformation delete-stack \
+  --stack-name my-web-stack
+```
+
+Wait for deletion:
+
+```bash
+aws cloudformation wait stack-delete-complete \
+  --stack-name my-web-stack
+```
+
+**Note:** Stack deletion can delete the resources managed by that stack. Deletion policies, retained resources, dependencies, and termination protection can affect the outcome. Always inspect the planned changes and resource impact before applying them.
+
+## 8. CloudFormation vs Terraform
+
+| Feature | AWS CloudFormation | Terraform |
+|---|---|---|
+| Provider | AWS-native service | Multi-cloud IaC tool |
+| Template language | YAML and JSON | HCL |
+| State management | Managed by CloudFormation | Terraform state |
+| AWS integration | Native AWS resource integration | AWS provider |
+| Resource grouping | Stacks | Configurations and state |
+| Change preview | Change Sets | `terraform plan` |
+| Typical use | AWS infrastructure | AWS and multi-cloud infrastructure |
+
+Both tools are widely used for Infrastructure as Code. The best choice depends on organizational standards, provider requirements, team workflows, and the resources being managed.
+
+## 9. CloudFormation Best Practices
+
+- Store templates in Git.
+- Use parameters instead of hardcoding environment-specific values.
+- Apply least-privilege IAM permissions.
+- Validate templates before deployment.
+- Review change sets before updating production stacks.
+- Use stack policies and deletion protection where appropriate.
+- Use `DeletionPolicy` and `UpdateReplacePolicy` carefully for resources that must be retained.
+- Use CloudFormation drift detection to identify certain differences between actual resources and the expected template configuration.
+- Avoid embedding secrets directly in templates.
+- Monitor stack events and CloudFormation operation failures.
+- Clean up test stacks after completing practical labs.
+
+## 10. Conclusion
+
+AWS CloudFormation is an AWS-native Infrastructure as Code service that allows us to provision, manage, and update AWS infrastructure using YAML or JSON templates.
+
+As a DevOps Engineer, CloudFormation can help automate infrastructure deployment, maintain consistency across environments, integrate infrastructure changes into CI/CD pipelines, and manage AWS resources through version-controlled templates.
