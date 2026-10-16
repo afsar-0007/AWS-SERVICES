@@ -243,4 +243,3 @@ Both tools are widely used for Infrastructure as Code. The best choice depends o
 
 AWS CloudFormation is an AWS-native Infrastructure as Code service that allows us to provision, manage, and update AWS infrastructure using YAML or JSON templates.
 
-As a DevOps Engineer, CloudFormation can help automate infrastructure deployment, maintain consistency across environments, integrate infrastructure changes into CI/CD pipelines, and manage AWS resources through version-controlled templates.
