@@ -10,9 +10,7 @@ AWS Auto Scaling automatically adjusts the number of resources running in an app
 - **Scalability:** Handles increasing or decreasing traffic.
 - **Cost Optimization:** Removes unnecessary instances when demand decreases.
 - **Fault Tolerance:** Replaces unhealthy EC2 instances.
-- **Automation:** Reduces manual infrastructure management.
-
-## 2. Important Components
+- **Automation:** Reduces manual 
 
 ### A. Launch Template
 A Launch Template defines the configuration used to launch EC2 instances.
