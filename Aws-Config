@@ -121,4 +121,6 @@ It helps DevOps teams continuously answer:
 
 > **“What is the current configuration of my AWS resources, what changed, and does the current configuration follow my rules?”**
 
-This makes AWS Config useful for maintaining **secure, compliant, and properly configured AWS infrastructure**.
+This makes AWS Config useful 
+
+
