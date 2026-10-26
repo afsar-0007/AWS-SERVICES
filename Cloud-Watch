@@ -1,6 +1,6 @@
 Today, I learned about Amazon CloudWatch, an AWS monitoring and observability service used to monitor applications, AWS resources, and infrastructure in real time.
 
-CloudWatch helps DevOps engineers understand what is happening inside their AWS environment, detect issues, create alerts, analyze logs, and automate responses to specific events.
+
 
 🔹 What is Amazon CloudWatch?
 
