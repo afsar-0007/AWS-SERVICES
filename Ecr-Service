@@ -1,4 +1,4 @@
-Day — Amazon ECR
+
 
 Today I learned about Amazon Elastic Container Registry (ECR) and how it is used to store and manage Docker container images in AWS.
 
