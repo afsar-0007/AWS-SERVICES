@@ -1,4 +1,4 @@
-Amazon EventBridge — AWS Learning Notes
+
 What is Amazon EventBridge?
 
 Amazon EventBridge is a serverless AWS service used to detect events and automatically trigger actions based on those events.
