@@ -1,6 +1,5 @@
 
-
-## 1. What is AWS Gateway Load Balancer?
+ 1. What is AWS Gateway Load Balancer?
 
 AWS Gateway Load Balancer (GWLB) is a fully managed AWS service used to deploy, scale, and manage virtual network appliances such as firewalls, Intrusion Detection and Prevention Systems (IDS/IPS), and Deep Packet Inspection (DPI) systems.
 
