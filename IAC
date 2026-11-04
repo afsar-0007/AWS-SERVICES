@@ -4,9 +4,7 @@
 
 AWS CloudFormation is an Infrastructure as Code (IaC) service provided by AWS that allows us to create, manage, update, and delete AWS resources using templates written in YAML or JSON.
 
-Instead of manually creating resources through the AWS Management Console, we define the required infrastructure in a template called a **CloudFormation Template (CFT)**. CloudFormation reads this template and provisions the resources automatically.
-
-**Example:** Instead of manually creating a VPC, subnet, EC2 instance, and security group, we can define all these resources in a YAML file and deploy them together using CloudFormation.
+Instead of manually creating resources through the AWS Management Console, we define the required infrastructure in a template called a **CloudFormation Template (CFT)**. CloudFormation reads this template and provisions the resources 
 
 ## 2. Why Do We Use CloudFormation?
 
