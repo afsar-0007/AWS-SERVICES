@@ -1,5 +1,4 @@
-## ☁️ AWS CloudTrail
-
+## ☁️ 
 Today I learned about **AWS CloudTrail**, an AWS service used to **record and track API activity and actions performed in an AWS account**.
 
 CloudTrail helps us understand **who performed an action, what action was performed, when it happened, and from where the request originated**.
