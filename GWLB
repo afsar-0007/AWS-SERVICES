@@ -6,8 +6,7 @@ AWS Gateway Load Balancer (GWLB) is a fully managed AWS service used to deploy, 
 GWLB operates at **Layer 3 (Network Layer)** of the OSI model and uses the **GENEVE protocol over UDP port 6081** to exchange encapsulated traffic with compatible virtual appliances.
 
 It combines transparent network traffic forwarding with load balancing, enabling organizations to inspect and secure network traffic without making major changes to their application architecture.
-
-## 2. Why Do We Need GWLB?
+2. Why Do We Need GWLB?
 
 In a cloud environment, applications need protection against malicious traffic and network-based attacks. Organizations often use third-party security appliances to inspect and filter network traffic.
 
