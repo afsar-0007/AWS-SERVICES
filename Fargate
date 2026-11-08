@@ -56,7 +56,7 @@ EC2 Instance
  ├── Container 2
  └── Container 3
 
-You have to decide:
+
 "How many EC2 instances do I need?"
 
 With Fargate, you mainly define:
