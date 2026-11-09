@@ -15,9 +15,7 @@ Examples include:
 - Disaster recovery backups
 - Media files that must be retained for several years
 
-Unlike S3 Standard, which is designed for frequently accessed data, S3 Glacier storage classes are optimized for infrequently accessed data and long-term retention.
-
-**Important:** S3 Glacier is not a replacement for every S3 storage class. The correct choice depends on how often you access the data, how quickly you need to retrieve it, and the total cost.
+Unlike S3 Standard, which is designed for frequently accessed data, S3 Glacier storage classes are optimized for infrequently accessed data and long-term 
 
 ## 2. Why Do We Use S3 Glacier?
 
